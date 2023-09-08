@@ -1,0 +1,81 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\Fede\\Documents\\Proyectos\\stats basket\\ApiBasket\\apiBask\\wwwroot\\images\\23KNICKSwebSUB-superJumbo.jpg",
+      "PackagePath": "staticwebassets\\images\\23KNICKSwebSUB-superJumbo.jpg"
+    },
+    {
+      "Id": "C:\\Users\\Fede\\Documents\\Proyectos\\stats basket\\ApiBasket\\apiBask\\wwwroot\\images\\2bd8ed99696e48feee2ac8692f321c34.jpg",
+      "PackagePath": "staticwebassets\\images\\2bd8ed99696e48feee2ac8692f321c34.jpg"
+    },
+    {
+      "Id": "C:\\Users\\Fede\\Documents\\Proyectos\\stats basket\\ApiBasket\\apiBask\\wwwroot\\images\\8657309deae443f64824f899d5719522.jpg",
+      "PackagePath": "staticwebassets\\images\\8657309deae443f64824f899d5719522.jpg"
+    },
+    {
+      "Id": "C:\\Users\\Fede\\Documents\\Proyectos\\stats basket\\ApiBasket\\apiBask\\wwwroot\\images\\Kobe_Bryant_2014.jpg",
+      "PackagePath": "staticwebassets\\images\\Kobe_Bryant_2014.jpg"
+    },
+    {
+      "Id": "C:\\Users\\Fede\\Documents\\Proyectos\\stats basket\\ApiBasket\\apiBask\\wwwroot\\images\\LeBron_James_(51959977144)_(cropped2).jpg",
+      "PackagePath": "staticwebassets\\images\\LeBron_James_(51959977144)_(cropped2).jpg"
+    },
+    {
+      "Id": "C:\\Users\\Fede\\Documents\\Proyectos\\stats basket\\ApiBasket\\apiBask\\wwwroot\\images\\air-jordan-rzjnqjw5ozl4xvxo.jpg",
+      "PackagePath": "staticwebassets\\images\\air-jordan-rzjnqjw5ozl4xvxo.jpg"
+    },
+    {
+      "Id": "C:\\Users\\Fede\\Documents\\Proyectos\\stats basket\\ApiBasket\\apiBask\\wwwroot\\images\\b01aa0d0d56914c59d198403d637030e.jpg",
+      "PackagePath": "staticwebassets\\images\\b01aa0d0d56914c59d198403d637030e.jpg"
+    },
+    {
+      "Id": "C:\\Users\\Fede\\Documents\\Proyectos\\stats basket\\ApiBasket\\apiBask\\wwwroot\\images\\descarga (1).jpg",
+      "PackagePath": "staticwebassets\\images\\descarga (1).jpg"
+    },
+    {
+      "Id": "C:\\Users\\Fede\\Documents\\Proyectos\\stats basket\\ApiBasket\\apiBask\\wwwroot\\images\\descarga.jpg",
+      "PackagePath": "staticwebassets\\images\\descarga.jpg"
+    },
+    {
+      "Id": "C:\\Users\\Fede\\Documents\\Proyectos\\stats basket\\ApiBasket\\apiBask\\wwwroot\\images\\descarga.png",
+      "PackagePath": "staticwebassets\\images\\descarga.png"
+    },
+    {
+      "Id": "C:\\Users\\Fede\\Documents\\Proyectos\\stats basket\\ApiBasket\\apiBask\\wwwroot\\images\\ee53d210-e057-11ec-b3ff-cab44997c484.jpg",
+      "PackagePath": "staticwebassets\\images\\ee53d210-e057-11ec-b3ff-cab44997c484.jpg"
+    },
+    {
+      "Id": "C:\\Users\\Fede\\Documents\\Proyectos\\stats basket\\ApiBasket\\apiBask\\wwwroot\\images\\grizzi.png",
+      "PackagePath": "staticwebassets\\images\\grizzi.png"
+    },
+    {
+      "Id": "C:\\Users\\Fede\\Documents\\Proyectos\\stats basket\\ApiBasket\\apiBask\\wwwroot\\images\\i (1).png",
+      "PackagePath": "staticwebassets\\images\\i (1).png"
+    },
+    {
+      "Id": "C:\\Users\\Fede\\Documents\\Proyectos\\stats basket\\ApiBasket\\apiBask\\wwwroot\\images\\i.png",
+      "PackagePath": "staticwebassets\\images\\i.png"
+    },
+    {
+      "Id": "C:\\Users\\Fede\\Documents\\Proyectos\\stats basket\\ApiBasket\\apiBask\\wwwroot\\images\\lakerslogo.webp",
+      "PackagePath": "staticwebassets\\images\\lakerslogo.webp"
+    },
+    {
+      "Id": "obj\\Release\\net7.0\\staticwebassets\\msbuild.apiBask.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Release\\net7.0\\staticwebassets\\msbuild.build.apiBask.props",
+      "PackagePath": "build\\apiBask.props"
+    },
+    {
+      "Id": "obj\\Release\\net7.0\\staticwebassets\\msbuild.buildMultiTargeting.apiBask.props",
+      "PackagePath": "buildMultiTargeting\\apiBask.props"
+    },
+    {
+      "Id": "obj\\Release\\net7.0\\staticwebassets\\msbuild.buildTransitive.apiBask.props",
+      "PackagePath": "buildTransitive\\apiBask.props"
+    }
+  ],
+  "ElementsToRemove": []
+}
