@@ -1,0 +1,4 @@
+apiBask.sln
+apiBask.csproj.user
+apiBask.csproj
+wwwroot

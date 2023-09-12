@@ -44,8 +44,8 @@ namespace apiBask.Controllers
                     _stat.Aciertos3Puntos = model.Aciertos3Puntos;
                     _stat.Faltas = model.Faltas;                    
                     _stat.Minutos = TimeSpan.FromMilliseconds( model.Minutos);
-                _dbContext.Add(_stat);
-                _dbContext.SaveChanges();
+                    _dbContext.Add(_stat);
+                    _dbContext.SaveChanges();
                     respuesta.exito = 1;
                     respuesta.mensaje = "Se creó la estadística de jugador correctamente.";
                 

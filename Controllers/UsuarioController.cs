@@ -2,6 +2,7 @@
 using apiBask.Models.Request;
 using apiBask.Models.Response;
 using apiBask.Services;
+using apiBask.Tools;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
@@ -30,9 +31,10 @@ namespace apiBask.Controllers
                 
                     Usuario user = new Usuario();
                     user.Usuario1 = model.Usuario;
-                    user.Pass = model.Pass;
-                _dbContext.Usuarios.Add(user);
-                _dbContext.SaveChanges();
+                    string sPass = Encrypt.GetSHA256(model.Pass);
+                    user.Pass = sPass;
+                    _dbContext.Usuarios.Add(user);
+                    _dbContext.SaveChanges();
                     respuesta.exito = 1;
                     respuesta.mensaje = "Registro con éxito.";
                 
@@ -55,7 +57,7 @@ namespace apiBask.Controllers
             if (userResponse == null)
             {
                 respuesta.mensaje = "Usuario o contraseña incorrectos.";
-                return BadRequest(respuesta);
+                return Ok(respuesta);
             }
 
             respuesta.exito = 1;

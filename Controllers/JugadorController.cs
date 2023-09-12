@@ -6,6 +6,8 @@ using apiBask.Models.Response;
 using Microsoft.EntityFrameworkCore;
 using apiBask.Models.Parcial;
 using Microsoft.AspNetCore.Authorization;
+using apiBask.Models.Storage;
+using Microsoft.IdentityModel.Tokens;
 
 namespace apiBask.Controllers
 {
@@ -17,10 +19,12 @@ namespace apiBask.Controllers
     {
         private readonly JugadorService jugadorService= new JugadorService();
         private readonly BasketContext _dbContext;
+        private readonly FileService _fileService;
 
         public JugadorController(BasketContext dbContext)
         {
             _dbContext = dbContext;
+            _fileService = new FileService(_dbContext);
         }
 
         [HttpPost("Crear")]
@@ -67,7 +71,7 @@ namespace apiBask.Controllers
             {                  
                 var _jugador = _dbContext.Jugadors.Where(d => d.Id == id).FirstOrDefault();
                 if(_jugador != null) 
-                {
+                {                    
                     if (!jugadorService.TieneDependencias(_dbContext, id))
                     {
                         _dbContext.Remove(_jugador);
@@ -104,8 +108,12 @@ namespace apiBask.Controllers
                     _jugador.Nombre = model.Nombre;
                     _jugador.Altura = model.Altura;
                     _jugador.Peso = model.Peso;
-                    _jugador.Foto = model.Foto;
+                    if (!model.Foto.IsNullOrEmpty()) 
+                    {
+                        _jugador.Foto = model.Foto;
+                    }                    
                     _jugador.Posicion = model.Posicion;
+                    _jugador.Numero = model.Numero;
                     if (model.EquipoId != null)
                     {                        
                         var _equipo = _dbContext.Equipos.Find(model.EquipoId);

@@ -6,6 +6,8 @@ C:\Users\Fede\Documents\Proyectos\stats basket\ApiBasket\apiBask\obj\Release\net
 C:\Users\Fede\Documents\Proyectos\stats basket\ApiBasket\apiBask\obj\Release\net7.0\PubTmp\Out\apiBask.pdb
 C:\Users\Fede\Documents\Proyectos\stats basket\ApiBasket\apiBask\obj\Release\net7.0\PubTmp\Out\Azure.Core.dll
 C:\Users\Fede\Documents\Proyectos\stats basket\ApiBasket\apiBask\obj\Release\net7.0\PubTmp\Out\Azure.Identity.dll
+C:\Users\Fede\Documents\Proyectos\stats basket\ApiBasket\apiBask\obj\Release\net7.0\PubTmp\Out\Azure.Storage.Blobs.dll
+C:\Users\Fede\Documents\Proyectos\stats basket\ApiBasket\apiBask\obj\Release\net7.0\PubTmp\Out\Azure.Storage.Common.dll
 C:\Users\Fede\Documents\Proyectos\stats basket\ApiBasket\apiBask\obj\Release\net7.0\PubTmp\Out\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 C:\Users\Fede\Documents\Proyectos\stats basket\ApiBasket\apiBask\obj\Release\net7.0\PubTmp\Out\Microsoft.AspNetCore.OpenApi.dll
 C:\Users\Fede\Documents\Proyectos\stats basket\ApiBasket\apiBask\obj\Release\net7.0\PubTmp\Out\Microsoft.Bcl.AsyncInterfaces.dll
@@ -31,6 +33,7 @@ C:\Users\Fede\Documents\Proyectos\stats basket\ApiBasket\apiBask\obj\Release\net
 C:\Users\Fede\Documents\Proyectos\stats basket\ApiBasket\apiBask\obj\Release\net7.0\PubTmp\Out\System.Configuration.ConfigurationManager.dll
 C:\Users\Fede\Documents\Proyectos\stats basket\ApiBasket\apiBask\obj\Release\net7.0\PubTmp\Out\System.Drawing.Common.dll
 C:\Users\Fede\Documents\Proyectos\stats basket\ApiBasket\apiBask\obj\Release\net7.0\PubTmp\Out\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\Fede\Documents\Proyectos\stats basket\ApiBasket\apiBask\obj\Release\net7.0\PubTmp\Out\System.IO.Hashing.dll
 C:\Users\Fede\Documents\Proyectos\stats basket\ApiBasket\apiBask\obj\Release\net7.0\PubTmp\Out\System.Memory.Data.dll
 C:\Users\Fede\Documents\Proyectos\stats basket\ApiBasket\apiBask\obj\Release\net7.0\PubTmp\Out\System.Runtime.Caching.dll
 C:\Users\Fede\Documents\Proyectos\stats basket\ApiBasket\apiBask\obj\Release\net7.0\PubTmp\Out\System.Security.Cryptography.ProtectedData.dll

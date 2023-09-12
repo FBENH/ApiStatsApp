@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 namespace apiBask.Controllers
 {
@@ -147,7 +148,10 @@ namespace apiBask.Controllers
                     _equipo.Nombre = model.Nombre;
                     _equipo.Entrenador = model.Entrenador;
                     _equipo.Ciudad = model.Ciudad;
-                    _equipo.Escudo = model.Escudo;
+                    if (!model.Escudo.IsNullOrEmpty()) 
+                    {
+                        _equipo.Escudo = model.Escudo;
+                    }                    
                     if (_equipo.Jugadors != null)
                     {
                         List<Jugador> jugadoresAModificar = new List<Jugador>();

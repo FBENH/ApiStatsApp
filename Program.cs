@@ -1,5 +1,6 @@
 using apiBask;
 using apiBask.Models.Common;
+using apiBask.Models.Storage;
 using apiBask.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -14,13 +15,19 @@ string _Cors = "MiCors";
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+
 
 var appSettingsSection = builder.Configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettingsSection);
 
 builder.Services.AddDbContext<BasketContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("default")));
+
+builder.Services.AddScoped<FileService>();
+
+builder.Services.AddControllers();
+
+//builder.Services.AddSingleton<FileService>();
 
 //JWT
 var appSettings = appSettingsSection.Get<AppSettings>();
@@ -59,11 +66,11 @@ var app = builder.Build();
 
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+//if (app.Environment.IsDevelopment())
+//{
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+//}
 
 
 
