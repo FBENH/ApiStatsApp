@@ -56,7 +56,7 @@ The demo runs on the free tiers of Azure:
    - App settings `ConnectionStrings__default`, `AppSettings__Secreto` and `Demo__Activa=true`.
    - Turn on *Web sockets* for SignalR.
    - On the database server, allow access from Azure services.
-3. **GitHub**: add the variable `AZURE_WEBAPP_NAME` and the secret `AZURE_WEBAPP_PUBLISH_PROFILE` (downloaded from the App Service overview; basic auth publishing credentials must be enabled). The `Deploy to Azure` workflow publishes every merge to `main`.
+3. **GitHub**: add the secret `AZURE_WEBAPP_PUBLISH_PROFILE` (downloaded from the App Service overview; basic auth publishing credentials must be enabled). The `Deploy to Azure` workflow publishes every merge to `main` to the app `statsappapi` (override it with the variable `AZURE_WEBAPP_NAME`).
 
 The demo league only plays while someone is watching: a request to its public pages or a SignalR connection to it starts the next game, and it stops 10 minutes after the last visit. When nobody is watching it doesn't touch the database, so the serverless database can pause.
 
