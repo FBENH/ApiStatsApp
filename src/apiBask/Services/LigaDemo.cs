@@ -17,12 +17,47 @@ namespace apiBask.Services
 
     // Liga de demo que se juega sola: la crea si no existe y simula sus partidos de a uno, en orden del fixture.
     // Cuando se termina el fixture arranca otra temporada con los mismos equipos.
+    // Solo juega mientras alguien la mira (la página pública o SignalR): sin visitas no toca la base,
+    // así la base puede pausarse y no se gasta cómputo en partidos que nadie ve.
     public class LigaDemo(IServiceScopeFactory scopes, ReproductorDePartidos reproductor, OpcionesDemo opciones, ILogger<LigaDemo> log)
         : BackgroundService
     {
         private static readonly TimeSpan Intervalo = TimeSpan.FromSeconds(20);
+        // Después de la última visita a la página se sigue jugando este tiempo, por si la persona sigue mirando.
+        private static readonly TimeSpan SinVisitas = TimeSpan.FromMinutes(10);
         private bool _jugando;
         private DateTime? _termino;
+        private DateTime _ultimaVisita = DateTime.MinValue;
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte> _mirando = new();
+        private readonly SemaphoreSlim _despertar = new(0, 1);
+
+        public bool EsLaDemo(string? slug) => opciones.Activa && slug == opciones.Slug;
+
+        // Alguien pidió datos de la liga de demo.
+        public void Visita(string? slug)
+        {
+            if (!EsLaDemo(slug)) return;
+            var estabaQuieta = !HayPublico;
+            _ultimaVisita = DateTime.UtcNow;
+            if (estabaQuieta) Despertar();
+        }
+
+        // Una conexión de SignalR sigue la liga de demo o uno de sus partidos.
+        public void Entra(string conexion)
+        {
+            _ultimaVisita = DateTime.UtcNow;
+            if (_mirando.TryAdd(conexion, 0) && _mirando.Count == 1) Despertar();
+        }
+
+        public void Sale(string conexion) => _mirando.TryRemove(conexion, out _);
+
+        private bool HayPublico => !_mirando.IsEmpty || DateTime.UtcNow - _ultimaVisita < SinVisitas;
+
+        private void Despertar()
+        {
+            try { _despertar.Release(); }
+            catch (SemaphoreFullException) { }
+        }
 
         private static readonly string[] Equipos = ["Leones", "Tigres", "Halcones", "Toros", "Lobos", "Cóndores"];
         private static readonly string[] Apellidos =
@@ -43,6 +78,12 @@ namespace apiBask.Services
             {
                 try
                 {
+                    // Sin nadie mirando no se hace nada; el partido que esté en curso termina solo.
+                    if (!HayPublico)
+                    {
+                        await _despertar.WaitAsync(Intervalo, stoppingToken);
+                        continue;
+                    }
                     await using var scope = scopes.CreateAsyncScope();
                     await RevisarAsync(scope.ServiceProvider, primeraVuelta);
                     primeraVuelta = false;
@@ -51,7 +92,7 @@ namespace apiBask.Services
                 {
                     log.LogError(e, "Falló la liga de demo.");
                 }
-                await Task.Delay(Intervalo, stoppingToken);
+                await _despertar.WaitAsync(Intervalo, stoppingToken);
             }
         }
 
