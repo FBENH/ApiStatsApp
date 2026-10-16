@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace apiBask.Controllers
 {
     [Route("/Partido")]
-    public class PartidoController(BasketContext db) : ApiControllerBase
+    public class PartidoController(BasketContext db, AvisosEnVivo avisos) : ApiControllerBase
     {
         private IQueryable<Partido> MisPartidos => db.Partidos.Where(p => p.UsuarioId == UsuarioActual);
 
@@ -81,6 +81,7 @@ namespace apiBask.Controllers
                 partido.GanadorId = null;
                 await db.SaveChangesAsync();
                 await transaccion.CommitAsync();
+                await avisos.PartidoAsync(partido);
                 return Exito("Se borró lo anotado y el partido volvió al fixture.");
             }
             if (partido != null)

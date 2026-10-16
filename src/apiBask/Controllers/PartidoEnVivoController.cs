@@ -9,10 +9,8 @@ namespace apiBask.Controllers
     // Partidos que se anotan jugada a jugada. Cada jugada se guarda apenas se carga,
     // así el partido se puede retomar desde otro dispositivo si se corta la conexión.
     [Route("/Partido")]
-    public class PartidoEnVivoController(BasketContext db) : ApiControllerBase
+    public class PartidoEnVivoController(BasketContext db, RegistroDePartido registro, AvisosEnVivo avisos) : ApiControllerBase
     {
-        private const int MaxJugadasPorEnvio = 500;
-
         private IQueryable<Partido> MisPartidos =>
             db.Partidos.Where(p => p.UsuarioId == UsuarioActual && p.Activo);
 
@@ -57,6 +55,7 @@ namespace apiBask.Controllers
             partido.Fecha = model.Fecha ?? partido.Fecha;
             partido.Lugar = model.Lugar ?? partido.Lugar;
             await db.SaveChangesAsync();
+            await avisos.PartidoAsync(partido);
             return Exito("Se inició el partido.", partido.Id);
         }
 
@@ -101,42 +100,9 @@ namespace apiBask.Controllers
         {
             var partido = await MisPartidos.FirstOrDefaultAsync(p => p.Id == partidoId);
             if (partido == null) return NoEncontrado("No se encontró el partido.");
-            if (partido.Estado == EstadoPartido.Programado) return Invalido("El partido todavía no se empezó.");
-            if (jugadas.Count > MaxJugadasPorEnvio) return Invalido($"Se pueden mandar hasta {MaxJugadasPorEnvio} jugadas por vez.");
-            if (jugadas.Select(j => j.Id).Distinct().Count() != jugadas.Count) return Invalido("Hay jugadas repetidas en el envío.");
-
-            var error = Validar(partido, jugadas);
+            var error = await registro.ValidarAsync(partido, jugadas);
             if (error != null) return Invalido(error);
-            var jugadorIds = jugadas.SelectMany(j => new[] { j.JugadorId, j.SaleId }).OfType<int>().Distinct().ToList();
-            var jugadoresPropios = await db.Jugadores.CountAsync(j => jugadorIds.Contains(j.Id) && j.UsuarioId == UsuarioActual);
-            if (jugadoresPropios != jugadorIds.Count) return Invalido("Los jugadores tienen que ser tuyos.");
-
-            var ids = jugadas.Select(j => j.Id).ToList();
-            var existentes = await db.Jugadas.Where(j => ids.Contains(j.Id)).Select(j => j.Id).ToListAsync();
-            var ahora = DateTime.UtcNow;
-            var nuevas = jugadas.Where(j => !existentes.Contains(j.Id)).Select(j => new Jugada
-            {
-                Id = j.Id,
-                PartidoId = partidoId,
-                Numero = j.Numero,
-                Cuarto = j.Cuarto,
-                RelojMs = j.RelojMs,
-                Tipo = j.Tipo,
-                EquipoId = j.EquipoId,
-                JugadorId = j.JugadorId,
-                SaleId = j.SaleId,
-                Acierto = j.Acierto,
-                Valor = j.Valor,
-                Ofensivo = j.Ofensivo,
-                X = j.X,
-                Y = j.Y,
-                RelacionadaId = j.RelacionadaId,
-                CreadaEn = ahora,
-            }).ToList();
-            db.Jugadas.AddRange(nuevas);
-            await db.SaveChangesAsync();
-            if (partido.Estado == EstadoPartido.Finalizado) await RecalcularAsync(partido, null);
-            return Exito("Se guardaron las jugadas.", nuevas.Count);
+            return Exito("Se guardaron las jugadas.", await registro.AgregarAsync(partido, jugadas));
         }
 
         // Deshacer: borra una jugada. Si ya no existe, no es un error (puede ser un reintento).
@@ -145,13 +111,7 @@ namespace apiBask.Controllers
         {
             var partido = await MisPartidos.FirstOrDefaultAsync(p => p.Id == partidoId);
             if (partido == null) return NoEncontrado("No se encontró el partido.");
-            var jugada = await db.Jugadas.FirstOrDefaultAsync(j => j.Id == id && j.PartidoId == partidoId);
-            if (jugada != null)
-            {
-                db.Jugadas.Remove(jugada);
-                await db.SaveChangesAsync();
-                if (partido.Estado == EstadoPartido.Finalizado) await RecalcularAsync(partido, null);
-            }
+            await registro.BorrarAsync(partido, id);
             return Exito("Se borró la jugada.");
         }
 
@@ -167,49 +127,8 @@ namespace apiBask.Controllers
             if (fin is { RelojMs: < 0 } or { Cuarto: < 1 })
                 return Invalido("El cuarto o el reloj final no son válidos.");
 
-            partido.Estado = EstadoPartido.Finalizado;
-            await RecalcularAsync(partido, fin is { Cuarto: int c } ? (c, fin.RelojMs ?? 0) : null);
+            await registro.FinalizarAsync(partido, fin is { Cuarto: int c } ? (c, fin.RelojMs ?? 0) : null);
             return Exito("Se terminó el partido.", partido.Id);
-        }
-
-        private async Task RecalcularAsync(Partido partido, (int, int)? fin)
-        {
-            var jugadas = await db.Jugadas.AsNoTracking().Where(j => j.PartidoId == partido.Id).ToListAsync();
-            var planilla = Planilla.Calcular(partido, jugadas, fin);
-
-            // Las filas viejas se reemplazan dentro de la misma transacción.
-            await using var transaccion = await db.Database.BeginTransactionAsync();
-            await db.EstadisticasJugador.Where(e => e.PartidoId == partido.Id).ExecuteDeleteAsync();
-            await db.EstadisticasPartido.Where(e => e.PartidoId == partido.Id).ExecuteDeleteAsync();
-            db.EstadisticasJugador.AddRange(planilla.Jugadores);
-            db.EstadisticasPartido.AddRange(planilla.Equipos);
-            var local = planilla.Equipos.First(e => e.EquipoId == partido.LocalId).Puntos;
-            var visitante = planilla.Equipos.First(e => e.EquipoId == partido.VisitanteId).Puntos;
-            partido.GanadorId = local > visitante ? partido.LocalId : visitante > local ? partido.VisitanteId : null;
-            await db.SaveChangesAsync();
-            await transaccion.CommitAsync();
-        }
-
-        private static string? Validar(Partido partido, List<JugadaDto> jugadas)
-        {
-            foreach (var j in jugadas)
-            {
-                if (j.EquipoId != partido.LocalId && j.EquipoId != partido.VisitanteId)
-                    return "El equipo de la jugada no juega este partido.";
-                if (j.Cuarto < 1 || j.Cuarto > 10 || j.RelojMs < 0 || j.Numero < 0)
-                    return "El cuarto, el reloj o el número de la jugada no son válidos.";
-                if (j.X is < 0 or > 1 || j.Y is < 0 or > 1)
-                    return "La ubicación del tiro tiene que estar entre 0 y 1.";
-                var valida = j.Tipo switch
-                {
-                    TipoJugada.Tiro => j.Acierto != null && j.Valor is 2 or 3,
-                    TipoJugada.Libre => j.Acierto != null,
-                    TipoJugada.Cambio => j.JugadorId != null || j.SaleId != null,
-                    _ => true,
-                };
-                if (!valida) return $"Faltan datos en una jugada de tipo {j.Tipo}.";
-            }
-            return null;
         }
     }
 }

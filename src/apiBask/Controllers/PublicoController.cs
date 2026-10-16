@@ -101,8 +101,7 @@ namespace apiBask.Controllers
                 jugadores,
                 planilla = planilla.Select(e => new { estadistica = e.ToResponse(), valoracion = TablaLiga.Valoracion(e) }),
                 equipos = equipos.Select(e => e.ToResponse()),
-                jugadas = jugadas.Select(j => new JugadaDto(j.Id, j.Numero, j.Cuarto, j.RelojMs, j.Tipo, j.EquipoId, j.JugadorId,
-                    j.SaleId, j.Acierto, j.Valor, j.Ofensivo, j.X, j.Y, j.RelacionadaId)),
+                jugadas = jugadas.Select(AvisosEnVivo.Dto),
             });
         }
 
@@ -247,10 +246,10 @@ namespace apiBask.Controllers
             EquipoEnPartido Local, EquipoEnPartido Visitante);
 
         // Los partidos de una temporada con el marcador: el guardado si terminó, o la suma de las jugadas si se está jugando.
-        public static async Task<List<PartidoDeLiga>> PartidosDeAsync(BasketContext db, int temporadaId)
+        public static async Task<List<PartidoDeLiga>> PartidosDeAsync(BasketContext db, int temporadaId, int? partidoId = null)
         {
             var filas = await db.Partidos.AsNoTracking()
-                .Where(p => p.TemporadaId == temporadaId && p.Activo)
+                .Where(p => p.TemporadaId == temporadaId && p.Activo && (partidoId == null || p.Id == partidoId))
                 .OrderBy(p => p.Jornada).ThenBy(p => p.Fecha).ThenBy(p => p.Id)
                 .Select(p => new
                 {

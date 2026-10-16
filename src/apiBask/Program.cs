@@ -24,7 +24,12 @@ builder.Services.AddScoped<FileService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 
+builder.Services.AddScoped<AvisosEnVivo>();
+builder.Services.AddScoped<RegistroDePartido>();
+builder.Services.AddSingleton<ReproductorDePartidos>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<ReproductorDePartidos>());
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 
 // JWT
 var appSettings = appSettingsSection.Get<AppSettings>();
@@ -81,6 +86,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<apiBask.Hubs.PartidosHub>("/hubs/partidos");
 
 app.Run();
 
