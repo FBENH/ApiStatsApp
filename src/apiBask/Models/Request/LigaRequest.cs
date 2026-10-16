@@ -13,6 +13,8 @@ namespace apiBask.Models.Request
 
     public record PartidoFixtureDto(int LocalId, int VisitanteId, DateTime? Fecha, string? Lugar, int? Jornada);
 
+    public record ModificarPartidoRequest(int Id, int LocalId, int VisitanteId, DateTime? Fecha, string? Lugar, int? Jornada);
+
     public record FixtureRequest(int TemporadaId, List<PartidoFixtureDto> Partidos);
 
     // Arma el fixture de todos contra todos de cada división, una fecha cada `DiasEntreFechas` días.

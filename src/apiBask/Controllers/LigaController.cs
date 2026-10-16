@@ -11,7 +11,7 @@ namespace apiBask.Controllers
     // Gestión de las ligas del usuario: temporadas, divisiones, equipos inscriptos y fixture.
     // Lo que ve el público está en PublicoController.
     [Route("/Liga")]
-    public partial class LigaController(BasketContext db) : ApiControllerBase
+    public partial class LigaController(BasketContext db, ReproductorDePartidos reproductor, AvisosEnVivo avisos) : ApiControllerBase
     {
         private IQueryable<Liga> MisLigas => db.Ligas.Where(l => l.UsuarioId == UsuarioActual);
         private IQueryable<Temporada> MisTemporadas => db.Temporadas.Where(t => t.Liga.UsuarioId == UsuarioActual);
@@ -196,6 +196,57 @@ namespace apiBask.Controllers
             db.Partidos.AddRange(partidos);
             await db.SaveChangesAsync();
             return Exito("Se agregaron los partidos.", partidos.Select(p => p.Id));
+        }
+
+        // Cambia los equipos, el día, el lugar o la fecha del fixture de un partido que todavía no se jugó.
+        [HttpPut("Partido")]
+        public async Task<IActionResult> ModificarPartido(ModificarPartidoRequest model)
+        {
+            var partido = await db.Partidos.Include(p => p.Temporada!).ThenInclude(t => t.Inscripciones)
+                .FirstOrDefaultAsync(p => p.Id == model.Id && p.UsuarioId == UsuarioActual && p.TemporadaId != null && p.Activo);
+            if (partido == null) return NoEncontrado("No se encontró el partido.");
+            if (partido.Estado != EstadoPartido.Programado) return Invalido("Solo se puede cambiar un partido que todavía no se empezó.");
+            if (model.LocalId == model.VisitanteId) return Invalido("El local y el visitante tienen que ser equipos distintos.");
+            var inscriptos = partido.Temporada!.Inscripciones.Select(i => i.EquipoId).ToHashSet();
+            if (!inscriptos.Contains(model.LocalId) || !inscriptos.Contains(model.VisitanteId))
+                return Invalido("Los dos equipos tienen que estar inscriptos en la temporada.");
+            if (model.Lugar?.Length > 100) return Invalido("El lugar puede tener hasta 100 caracteres.");
+
+            partido.LocalId = model.LocalId;
+            partido.VisitanteId = model.VisitanteId;
+            partido.Fecha = model.Fecha;
+            partido.Lugar = Vacio(model.Lugar);
+            partido.Jornada = model.Jornada;
+            await db.SaveChangesAsync();
+            return Exito("Se modificó el partido.");
+        }
+
+        // Juega solo un partido del fixture, con jugadas inventadas que se cargan de a una. Sirve para la demo.
+        [HttpPost("Simular")]
+        public async Task<IActionResult> Simular(int partidoId, double segundosEntreJugadas = 3)
+        {
+            var partido = await db.Partidos
+                .FirstOrDefaultAsync(p => p.Id == partidoId && p.UsuarioId == UsuarioActual && p.TemporadaId != null && p.Activo);
+            if (partido == null) return NoEncontrado("No se encontró el partido.");
+            if (partido.Estado != EstadoPartido.Programado) return Invalido("Solo se puede simular un partido que todavía no se empezó.");
+            if (segundosEntreJugadas is < 0 or > 30) return Invalido("La pausa entre jugadas tiene que ser de 0 a 30 segundos.");
+
+            var jugadores = await db.Jugadores.AsNoTracking()
+                .Where(j => (j.EquipoId == partido.LocalId || j.EquipoId == partido.VisitanteId) && j.Activo)
+                .OrderBy(j => j.Numero)
+                .Select(j => new { j.Id, j.EquipoId })
+                .ToListAsync();
+            var locales = jugadores.Where(j => j.EquipoId == partido.LocalId).Select(j => j.Id).ToList();
+            var visitantes = jugadores.Where(j => j.EquipoId == partido.VisitanteId).Select(j => j.Id).ToList();
+            if (locales.Count == 0 || visitantes.Count == 0) return Invalido("Los dos equipos necesitan jugadores.");
+
+            partido.Estado = EstadoPartido.EnCurso;
+            partido.Fecha ??= DateTime.UtcNow.Date;
+            await db.SaveChangesAsync();
+            await avisos.PartidoAsync(partido);
+            var jugadas = Simulador.Generar(partido, locales, visitantes, Random.Shared);
+            reproductor.Encolar(new(partido.Id, jugadas, TimeSpan.FromSeconds(segundosEntreJugadas)));
+            return Exito("Empezó la simulación.", jugadas.Count);
         }
 
         [HttpPost("GenerarFixture")]
