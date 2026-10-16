@@ -231,22 +231,9 @@ namespace apiBask.Controllers
             if (partido.Estado != EstadoPartido.Programado) return Invalido("Solo se puede simular un partido que todavía no se empezó.");
             if (segundosEntreJugadas is < 0 or > 30) return Invalido("La pausa entre jugadas tiene que ser de 0 a 30 segundos.");
 
-            var jugadores = await db.Jugadores.AsNoTracking()
-                .Where(j => (j.EquipoId == partido.LocalId || j.EquipoId == partido.VisitanteId) && j.Activo)
-                .OrderBy(j => j.Numero)
-                .Select(j => new { j.Id, j.EquipoId })
-                .ToListAsync();
-            var locales = jugadores.Where(j => j.EquipoId == partido.LocalId).Select(j => j.Id).ToList();
-            var visitantes = jugadores.Where(j => j.EquipoId == partido.VisitanteId).Select(j => j.Id).ToList();
-            if (locales.Count == 0 || visitantes.Count == 0) return Invalido("Los dos equipos necesitan jugadores.");
-
-            partido.Estado = EstadoPartido.EnCurso;
-            partido.Fecha ??= DateTime.UtcNow.Date;
-            await db.SaveChangesAsync();
-            await avisos.PartidoAsync(partido);
-            var jugadas = Simulador.Generar(partido, locales, visitantes, Random.Shared);
-            reproductor.Encolar(new(partido.Id, jugadas, TimeSpan.FromSeconds(segundosEntreJugadas)));
-            return Exito("Empezó la simulación.", jugadas.Count);
+            var jugadas = await reproductor.EmpezarAsync(db, avisos, partido, TimeSpan.FromSeconds(segundosEntreJugadas));
+            if (jugadas == null) return Invalido("Los dos equipos necesitan jugadores.");
+            return Exito("Empezó la simulación.", jugadas);
         }
 
         [HttpPost("GenerarFixture")]
