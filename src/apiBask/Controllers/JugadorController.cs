@@ -35,7 +35,7 @@ namespace apiBask.Controllers
             }
             db.Jugadores.Add(jugador);
             await db.SaveChangesAsync();
-            return Exito("Se creó el jugador correctamente.");
+            return Exito("Se creó el jugador correctamente.", jugador.Id);
         }
 
         [HttpDelete("Eliminar")]
