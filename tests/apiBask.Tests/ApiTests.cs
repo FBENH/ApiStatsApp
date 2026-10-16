@@ -95,7 +95,7 @@ public class ApiTests(ApiFactory factory)
 
         var crear = await LeerAsync(await cliente.PostAsJsonAsync("/Partido/Crear", new
         {
-            partido = new { equipoLocal = localId, equipoVisitante = visitanteId, ganador = localId, lugar = "Cancha", idUsuario = usuario },
+            partido = new { equipoLocal = localId, equipoVisitante = visitanteId, ganador = localId, fecha = "2026-10-16", lugar = "Cancha", idUsuario = usuario },
             statJ = new[]
             {
                 new { jugadorId = jugadorLocal, equipoId = localId, puntos = 5, aciertos2Puntos = 1, intentos2Puntos = 2, aciertos3Puntos = 1, intentos3Puntos = 1, minutos = 600000L }
@@ -111,6 +111,7 @@ public class ApiTests(ApiFactory factory)
 
         var partido = (await LeerAsync(await cliente.GetAsync($"/Partido/ConStats?id={partidoId}"))).Data;
         Assert.Equal("Local", partido.GetProperty("ganadorNombre").GetString());
+        Assert.StartsWith("2026-10-16", partido.GetProperty("fecha").GetString());
         Assert.Equal(2, partido.GetProperty("statPartido").GetArrayLength());
         var stat = Assert.Single(Assert.Single(partido.GetProperty("jugadores").EnumerateArray())
             .GetProperty("estadisticasJugador").EnumerateArray());
