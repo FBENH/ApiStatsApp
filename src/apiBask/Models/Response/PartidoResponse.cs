@@ -7,6 +7,8 @@
 
         public DateTime? Fecha { get; set; }
 
+        public apiBask.Models.EstadoPartido Estado { get; set; }
+
         public int? id { get; set; }
 
         public string? Local { get; set; }

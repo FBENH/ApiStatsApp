@@ -11,6 +11,7 @@ public class BasketContext(DbContextOptions<BasketContext> options) : DbContext(
     public DbSet<Partido> Partidos => Set<Partido>();
     public DbSet<EstadisticaJugador> EstadisticasJugador => Set<EstadisticaJugador>();
     public DbSet<EstadisticaPartido> EstadisticasPartido => Set<EstadisticaPartido>();
+    public DbSet<Jugada> Jugadas => Set<Jugada>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -61,6 +62,17 @@ public class BasketContext(DbContextOptions<BasketContext> options) : DbContext(
             e.HasKey(x => new { x.PartidoId, x.EquipoId });
             e.HasOne(x => x.Partido).WithMany(p => p.EstadisticasPartido).HasForeignKey(x => x.PartidoId);
             e.HasOne(x => x.Equipo).WithMany(eq => eq.EstadisticasPartido).HasForeignKey(x => x.EquipoId);
+        });
+
+        modelBuilder.Entity<Jugada>(e =>
+        {
+            e.Property(x => x.Id).ValueGeneratedNever();
+            e.Property(x => x.Tipo).HasConversion<string>().HasMaxLength(20);
+            e.HasIndex(x => new { x.PartidoId, x.Numero });
+            e.HasOne(x => x.Partido).WithMany(p => p.Jugadas).HasForeignKey(x => x.PartidoId);
+            e.HasOne<Equipo>().WithMany().HasForeignKey(x => x.EquipoId);
+            e.HasOne<Jugador>().WithMany().HasForeignKey(x => x.JugadorId);
+            e.HasOne<Jugador>().WithMany().HasForeignKey(x => x.SaleId);
         });
 
         // Nada se borra en cascada: lo que tiene historial se da de baja con Activo = false.

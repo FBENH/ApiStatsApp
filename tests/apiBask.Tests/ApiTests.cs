@@ -7,7 +7,7 @@ namespace apiBask.Tests;
 
 // Tests de caracterización: fijan cómo responde hoy la API para poder cambiarla con seguridad.
 [Collection(nameof(ApiCollection))]
-public class ApiTests(ApiFactory factory)
+public partial class ApiTests(ApiFactory factory)
 {
     private record Respuesta(int Exito, string? Mensaje, JsonElement Data);
 

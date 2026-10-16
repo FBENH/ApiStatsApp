@@ -188,6 +188,71 @@ namespace apiBask.Migrations
                     b.ToTable("EstadisticasPartido");
                 });
 
+            modelBuilder.Entity("apiBask.Models.Jugada", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool?>("Acierto")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("CreadaEn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Cuarto")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EquipoId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("JugadorId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Numero")
+                        .HasColumnType("int");
+
+                    b.Property<bool?>("Ofensivo")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("PartidoId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("RelacionadaId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("RelojMs")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SaleId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int?>("Valor")
+                        .HasColumnType("int");
+
+                    b.Property<double?>("X")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("Y")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EquipoId");
+
+                    b.HasIndex("JugadorId");
+
+                    b.HasIndex("SaleId");
+
+                    b.HasIndex("PartidoId", "Numero");
+
+                    b.ToTable("Jugadas");
+                });
+
             modelBuilder.Entity("apiBask.Models.Jugador", b =>
                 {
                     b.Property<int>("Id")
@@ -248,6 +313,12 @@ namespace apiBask.Migrations
 
                     b.Property<bool>("Activo")
                         .HasColumnType("bit");
+
+                    b.Property<int>("DuracionCuartoMin")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("Fecha")
                         .HasColumnType("datetime2");
@@ -368,6 +439,33 @@ namespace apiBask.Migrations
                     b.Navigation("Partido");
                 });
 
+            modelBuilder.Entity("apiBask.Models.Jugada", b =>
+                {
+                    b.HasOne("apiBask.Models.Equipo", null)
+                        .WithMany()
+                        .HasForeignKey("EquipoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("apiBask.Models.Jugador", null)
+                        .WithMany()
+                        .HasForeignKey("JugadorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("apiBask.Models.Partido", "Partido")
+                        .WithMany("Jugadas")
+                        .HasForeignKey("PartidoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("apiBask.Models.Jugador", null)
+                        .WithMany()
+                        .HasForeignKey("SaleId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Partido");
+                });
+
             modelBuilder.Entity("apiBask.Models.Jugador", b =>
                 {
                     b.HasOne("apiBask.Models.Equipo", "Equipo")
@@ -437,6 +535,8 @@ namespace apiBask.Migrations
                     b.Navigation("EstadisticasJugador");
 
                     b.Navigation("EstadisticasPartido");
+
+                    b.Navigation("Jugadas");
                 });
 
             modelBuilder.Entity("apiBask.Models.Usuario", b =>
