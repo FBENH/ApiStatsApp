@@ -65,9 +65,26 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Crea o actualiza la base al arrancar con las migraciones de EF.
-using (var scope = app.Services.CreateScope())
+// Si la base no responde (por ejemplo, porque está despertando) se reintenta un rato. Si sigue sin responder,
+// la API arranca igual y lo deja en el log, así /salud contesta y el error se puede ver.
+for (var intento = 1; ; intento++)
 {
-    scope.ServiceProvider.GetRequiredService<BasketContext>().Database.Migrate();
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        scope.ServiceProvider.GetRequiredService<BasketContext>().Database.Migrate();
+        break;
+    }
+    catch (Exception e) when (intento < 6)
+    {
+        app.Logger.LogWarning(e, "No se pudo migrar la base (intento {Intento}); se reintenta en 10 segundos.", intento);
+        Thread.Sleep(TimeSpan.FromSeconds(10));
+    }
+    catch (Exception e)
+    {
+        app.Logger.LogError(e, "No se pudo migrar la base. La API arranca sin migrar.");
+        break;
+    }
 }
 
 // Un error inesperado se registra en el log y el cliente recibe un mensaje genérico, sin detalles internos.
