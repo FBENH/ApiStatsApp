@@ -29,7 +29,8 @@ builder.Services.AddScoped<RegistroDePartido>();
 builder.Services.AddSingleton<ReproductorDePartidos>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<ReproductorDePartidos>());
 builder.Services.AddSingleton(builder.Configuration.GetSection("Demo").Get<OpcionesDemo>() ?? new OpcionesDemo());
-builder.Services.AddHostedService<LigaDemo>();
+builder.Services.AddSingleton<LigaDemo>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<LigaDemo>());
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
 
@@ -88,6 +89,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+// Para el ping que mantiene despierta la app: no toca la base, así la base se puede pausar.
+app.MapGet("/salud", () => "ok").AllowAnonymous();
 app.MapHub<apiBask.Hubs.PartidosHub>("/hubs/partidos");
 
 app.Run();

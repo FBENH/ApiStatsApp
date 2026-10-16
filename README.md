@@ -39,7 +39,7 @@ Requirements: .NET 10 SDK and Docker.
 | `AppSettings:Secreto` | JWT signing key, at least 32 characters |
 | `ConnectionStrings:Storage` | Azure Storage connection string for images |
 | `Storage:Container` | Blob container name (default `apibasket`) |
-| `Demo:Activa` | `true` creates the demo league and keeps simulating its games, one after another (default `false`) |
+| `Demo:Activa` | `true` creates the demo league and simulates its games one after another, only while someone is watching it (default `false`) |
 | `Demo:Slug` | Public address of the demo league (default `liga-demo`) |
 | `Demo:Usuario` / `Demo:Clave` | Account that owns the demo league. Without a password nobody can log in with it |
 | `Demo:SegundosEntreJugadas` | Pause between simulated plays (default `4`, about 25 minutes per game) |
@@ -58,7 +58,9 @@ The demo runs on the free tiers of Azure:
    - On the database server, allow access from Azure services.
 3. **GitHub**: add the variable `AZURE_WEBAPP_NAME` and the secret `AZURE_WEBAPP_PUBLISH_PROFILE` (downloaded from the App Service overview; basic auth publishing credentials must be enabled). The `Deploy to Azure` workflow publishes every merge to `main`.
 
-On F1 the app goes to sleep when nobody uses it. The first request wakes it up in a few seconds, and the demo league restarts the game that was interrupted.
+The demo league only plays while someone is watching: a request to its public pages or a SignalR connection to it starts the next game, and it stops 10 minutes after the last visit. When nobody is watching it doesn't touch the database, so the serverless database can pause.
+
+On F1 the app goes to sleep when nobody uses it. To keep it awake, ping `GET /salud`, which doesn't touch the database. If the app restarts in the middle of a demo game, that game is played again.
 
 ## Tests
 

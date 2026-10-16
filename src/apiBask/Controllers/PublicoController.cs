@@ -4,6 +4,7 @@ using apiBask.Models.Response;
 using apiBask.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 
 namespace apiBask.Controllers
@@ -13,7 +14,7 @@ namespace apiBask.Controllers
     [ApiController]
     [AllowAnonymous]
     [Route("/publico/ligas/{slug}")]
-    public class PublicoController(BasketContext db) : ControllerBase
+    public class PublicoController(BasketContext db, LigaDemo demo) : ControllerBase, IActionFilter
     {
         private const int CantidadDeLideres = 10;
 
@@ -279,6 +280,13 @@ namespace apiBask.Controllers
                     new(p.VisitanteId, p.visitante, p.visitanteEscudo, Puntos(p.VisitanteId)));
             }).ToList();
         }
+
+        // Cada pedido a la liga de demo cuenta como una visita: la demo solo juega mientras alguien la mira.
+        [NonAction]
+        public void OnActionExecuting(ActionExecutingContext context) => demo.Visita(context.RouteData.Values["slug"] as string);
+
+        [NonAction]
+        public void OnActionExecuted(ActionExecutedContext context) { }
 
         private async Task<(Liga? Liga, Temporada? Temporada)> BuscarAsync(string slug, int? temporada)
         {

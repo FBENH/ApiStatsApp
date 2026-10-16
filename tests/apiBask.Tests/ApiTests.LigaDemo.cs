@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace apiBask.Tests;
 
-// La liga de demo se crea sola al arrancar y va jugando su fixture sin que nadie anote.
+// La liga de demo juega su fixture sola, pero solo mientras alguien la está mirando.
 public partial class ApiTests
 {
     [Fact]
-    public async Task La_liga_de_demo_se_crea_y_juega_sus_partidos_sola()
+    public async Task La_liga_de_demo_juega_sola_solo_cuando_alguien_la_mira()
     {
         await using var conDemo = factory.WithWebHostBuilder(b =>
         {
@@ -17,6 +19,14 @@ public partial class ApiTests
             b.UseSetting("Demo:MinutosEntrePartidos", "0");
         });
         var cliente = conDemo.CreateClient();
+
+        // Sin visitas no hace nada: ni siquiera crea la liga.
+        await Task.Delay(1500, TestContext.Current.CancellationToken);
+        using (var scope = conDemo.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<BasketContext>();
+            Assert.False(await db.Ligas.AnyAsync(l => l.Slug == "demo-de-prueba", TestContext.Current.CancellationToken));
+        }
 
         var finalizados = 0;
         for (var intento = 0; intento < 60 && finalizados == 0; intento++)
