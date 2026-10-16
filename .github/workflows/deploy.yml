@@ -1,8 +1,8 @@
 name: Deploy to Azure
 
 # Publica la API en Azure App Service al mergear a main.
-# Necesita el secreto AZURE_WEBAPP_PUBLISH_PROFILE (Settings > Secrets and variables > Actions).
-# El nombre de la app se puede cambiar con la variable AZURE_WEBAPP_NAME.
+# Usa los secretos del entorno "prod": AZURE_WEBAPP_PUBLISH_PROFILE y, opcional, AZURE_WEBAPP_NAME
+# (Settings > Environments > prod). Sin nombre, publica en statsappapi.
 on:
   push:
     branches: [ "main" ]
@@ -18,8 +18,9 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: prod
     env:
-      APP: ${{ vars.AZURE_WEBAPP_NAME || 'statsappapi' }}
+      APP: ${{ secrets.AZURE_WEBAPP_NAME || vars.AZURE_WEBAPP_NAME || 'statsappapi' }}
       PERFIL: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
 
     steps:
