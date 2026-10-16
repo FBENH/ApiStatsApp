@@ -8,7 +8,8 @@ namespace apiBask.Services
         public static async Task<bool> TieneDependenciasAsync(BasketContext db, int equipoId) =>
             await db.Jugadores.AnyAsync(d => d.EquipoId == equipoId) ||
             await db.Partidos.AnyAsync(d => d.LocalId == equipoId || d.VisitanteId == equipoId) ||
-            await db.EstadisticasPartido.AnyAsync(d => d.EquipoId == equipoId);
+            await db.EstadisticasPartido.AnyAsync(d => d.EquipoId == equipoId) ||
+            await db.Inscripciones.AnyAsync(d => d.EquipoId == equipoId);
     }
 
     public static class JugadorService

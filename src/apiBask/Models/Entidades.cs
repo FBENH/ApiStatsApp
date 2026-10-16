@@ -12,6 +12,7 @@ public class Usuario
     public List<Equipo> Equipos { get; set; } = [];
     public List<Jugador> Jugadores { get; set; } = [];
     public List<Partido> Partidos { get; set; } = [];
+    public List<Liga> Ligas { get; set; } = [];
 }
 
 public class Equipo
@@ -62,6 +63,9 @@ public class Partido
     public bool Activo { get; set; }
     public EstadoPartido Estado { get; set; }
     public int DuracionCuartoMin { get; set; } = 10;
+    // Partidos de una liga: la temporada y la fecha del fixture (1, 2, 3...).
+    public int? TemporadaId { get; set; }
+    public int? Jornada { get; set; }
 
     public Equipo Local { get; set; } = null!;
     public Equipo Visitante { get; set; } = null!;
@@ -70,11 +74,61 @@ public class Partido
     public List<EstadisticaJugador> EstadisticasJugador { get; set; } = [];
     public List<EstadisticaPartido> EstadisticasPartido { get; set; } = [];
     public List<Jugada> Jugadas { get; set; } = [];
+    public Temporada? Temporada { get; set; }
 }
 
 // Finalizado es 0 para que los partidos cargados de una vez (Partido/Crear) queden terminados.
+// Programado es un partido del fixture de una liga que todavía no se empezó a anotar.
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum EstadoPartido { Finalizado, EnCurso }
+public enum EstadoPartido { Finalizado, EnCurso, Programado }
+
+// Una liga tiene una página pública (en otro dominio) que lee la API de /publico/ligas/{slug}.
+public class Liga
+{
+    public int Id { get; set; }
+    public string Nombre { get; set; } = null!;
+    // Identificador para la URL pública, por ejemplo "liga-del-barrio".
+    public string Slug { get; set; } = null!;
+    public string? Descripcion { get; set; }
+    public int UsuarioId { get; set; }
+
+    public Usuario Usuario { get; set; } = null!;
+    public List<Temporada> Temporadas { get; set; } = [];
+}
+
+public class Temporada
+{
+    public int Id { get; set; }
+    public int LigaId { get; set; }
+    public string Nombre { get; set; } = null!;
+
+    public Liga Liga { get; set; } = null!;
+    public List<Division> Divisiones { get; set; } = [];
+    public List<Inscripcion> Inscripciones { get; set; } = [];
+    public List<Partido> Partidos { get; set; } = [];
+}
+
+// Grupo o división dentro de una temporada. Una temporada sin divisiones tiene una sola tabla.
+public class Division
+{
+    public int Id { get; set; }
+    public int TemporadaId { get; set; }
+    public string Nombre { get; set; } = null!;
+
+    public Temporada Temporada { get; set; } = null!;
+}
+
+// Un equipo que juega una temporada, y en qué división.
+public class Inscripcion
+{
+    public int TemporadaId { get; set; }
+    public int EquipoId { get; set; }
+    public int? DivisionId { get; set; }
+
+    public Temporada Temporada { get; set; } = null!;
+    public Equipo Equipo { get; set; } = null!;
+    public Division? Division { get; set; }
+}
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum TipoJugada { Tiro, Libre, Rebote, Asistencia, Robo, Tapon, Perdida, Falta, Cambio, TiempoMuerto }

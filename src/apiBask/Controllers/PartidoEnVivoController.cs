@@ -19,6 +19,7 @@ namespace apiBask.Controllers
         [HttpPost("Iniciar")]
         public async Task<IActionResult> Iniciar(IniciarPartidoRequest model)
         {
+            if (model.PartidoId is int programadoId) return await IniciarProgramadoAsync(programadoId, model);
             if (model.EquipoLocal == model.EquipoVisitante)
                 return Invalido("El local y el visitante tienen que ser equipos distintos.");
             if (model.DuracionCuartoMin is < 1 or > 20)
@@ -39,6 +40,22 @@ namespace apiBask.Controllers
                 Activo = true,
             };
             db.Partidos.Add(partido);
+            await db.SaveChangesAsync();
+            return Exito("Se inició el partido.", partido.Id);
+        }
+
+        private async Task<IActionResult> IniciarProgramadoAsync(int id, IniciarPartidoRequest model)
+        {
+            if (model.DuracionCuartoMin is < 1 or > 20)
+                return Invalido("Los cuartos tienen que durar entre 1 y 20 minutos.");
+            var partido = await MisPartidos.FirstOrDefaultAsync(p => p.Id == id);
+            if (partido == null) return NoEncontrado("No se encontró el partido.");
+            if (partido.Estado != EstadoPartido.Programado) return Invalido("Ese partido ya se empezó a anotar.");
+
+            partido.Estado = EstadoPartido.EnCurso;
+            partido.DuracionCuartoMin = model.DuracionCuartoMin;
+            partido.Fecha = model.Fecha ?? partido.Fecha;
+            partido.Lugar = model.Lugar ?? partido.Lugar;
             await db.SaveChangesAsync();
             return Exito("Se inició el partido.", partido.Id);
         }
@@ -84,6 +101,7 @@ namespace apiBask.Controllers
         {
             var partido = await MisPartidos.FirstOrDefaultAsync(p => p.Id == partidoId);
             if (partido == null) return NoEncontrado("No se encontró el partido.");
+            if (partido.Estado == EstadoPartido.Programado) return Invalido("El partido todavía no se empezó.");
             if (jugadas.Count > MaxJugadasPorEnvio) return Invalido($"Se pueden mandar hasta {MaxJugadasPorEnvio} jugadas por vez.");
             if (jugadas.Select(j => j.Id).Distinct().Count() != jugadas.Count) return Invalido("Hay jugadas repetidas en el envío.");
 

@@ -12,6 +12,10 @@ public class BasketContext(DbContextOptions<BasketContext> options) : DbContext(
     public DbSet<EstadisticaJugador> EstadisticasJugador => Set<EstadisticaJugador>();
     public DbSet<EstadisticaPartido> EstadisticasPartido => Set<EstadisticaPartido>();
     public DbSet<Jugada> Jugadas => Set<Jugada>();
+    public DbSet<Liga> Ligas => Set<Liga>();
+    public DbSet<Temporada> Temporadas => Set<Temporada>();
+    public DbSet<Division> Divisiones => Set<Division>();
+    public DbSet<Inscripcion> Inscripciones => Set<Inscripcion>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -47,6 +51,25 @@ public class BasketContext(DbContextOptions<BasketContext> options) : DbContext(
             e.HasOne(x => x.Local).WithMany().HasForeignKey(x => x.LocalId);
             e.HasOne(x => x.Visitante).WithMany().HasForeignKey(x => x.VisitanteId);
             e.HasOne(x => x.Ganador).WithMany().HasForeignKey(x => x.GanadorId);
+            e.HasOne(x => x.Temporada).WithMany(t => t.Partidos).HasForeignKey(x => x.TemporadaId);
+        });
+
+        modelBuilder.Entity<Liga>(e =>
+        {
+            e.Property(x => x.Nombre).HasMaxLength(60);
+            e.Property(x => x.Slug).HasMaxLength(60);
+            e.HasIndex(x => x.Slug).IsUnique();
+            e.Property(x => x.Descripcion).HasMaxLength(500);
+            e.HasOne(x => x.Usuario).WithMany(u => u.Ligas).HasForeignKey(x => x.UsuarioId);
+        });
+
+        modelBuilder.Entity<Temporada>(e => e.Property(x => x.Nombre).HasMaxLength(40));
+        modelBuilder.Entity<Division>(e => e.Property(x => x.Nombre).HasMaxLength(40));
+
+        modelBuilder.Entity<Inscripcion>(e =>
+        {
+            e.HasKey(x => new { x.TemporadaId, x.EquipoId });
+            e.HasOne(x => x.Temporada).WithMany(t => t.Inscripciones).HasForeignKey(x => x.TemporadaId);
         });
 
         modelBuilder.Entity<EstadisticaJugador>(e =>
