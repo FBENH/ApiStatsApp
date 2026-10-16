@@ -80,3 +80,7 @@ dotnet tool restore
 cd src/apiBask
 dotnet ef migrations add <Name> -o Migrations
 ```
+
+## License
+
+MIT. See [LICENSE](LICENSE).
