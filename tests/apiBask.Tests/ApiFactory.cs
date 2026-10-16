@@ -8,9 +8,7 @@ namespace apiBask.Tests;
 // La API aplica las migraciones al arrancar, así que cada corrida empieza con una base nueva.
 public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private readonly MsSqlContainer _sql = new MsSqlBuilder()
-        .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
-        .Build();
+    private readonly MsSqlContainer _sql = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build();
 
     public async ValueTask InitializeAsync() => await _sql.StartAsync();
 

@@ -22,8 +22,8 @@
 
         public string? Lugar { get; set; }
 
-        public List<JugadorResponse> Jugadores { get; set; }
-        public List<EstadisticaPResponse> StatPartido { get; set; }
+        public List<JugadorResponse> Jugadores { get; set; } = [];
+        public List<EstadisticaPResponse> StatPartido { get; set; } = [];
 
     }
 }

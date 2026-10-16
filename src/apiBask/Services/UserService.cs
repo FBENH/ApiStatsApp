@@ -1,8 +1,9 @@
-﻿using apiBask.Models;
+using apiBask.Models;
 using apiBask.Models.Common;
 using apiBask.Models.Request;
 using apiBask.Models.Response;
-using apiBask.Tools;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -11,52 +12,49 @@ using System.Text;
 
 namespace apiBask.Services
 {
-    public class UserService : IUserService
+    public class UserService(BasketContext db, IOptions<AppSettings> appSettings, IPasswordHasher<Usuario> hasher) : IUserService
     {
-        private readonly AppSettings _appSettings;        
-        private readonly BasketContext _dbContext;
+        private readonly AppSettings _appSettings = appSettings.Value;
 
-        public UserService(BasketContext dbContext, IOptions<AppSettings> appSettings)
+        // Devuelve false si el nombre de usuario ya existe.
+        public async Task<bool> RegistrarAsync(RegisterRequest model)
         {
-            _dbContext = dbContext;
-            _appSettings = appSettings.Value;
+            if (await db.Usuarios.AnyAsync(u => u.Usuario1 == model.Usuario)) return false;
+
+            var usuario = new Usuario { Usuario1 = model.Usuario };
+            usuario.Pass = hasher.HashPassword(usuario, model.Pass);
+            db.Usuarios.Add(usuario);
+            await db.SaveChangesAsync();
+            return true;
         }
-        public UserResponse? Auth(LoginRequest model) 
+
+        public async Task<UserResponse?> AuthAsync(LoginRequest model)
         {
-            UserResponse response = new UserResponse();
-            
-                string spassword = Encrypt.GetSHA256(model.Password);
+            var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Usuario1 == model.Usuario);
+            if (usuario == null) return null;
 
-                var usuario = _dbContext.Usuarios.Where(d => d.Usuario1 == model.Usuario &&
-                                                d.Pass == spassword).FirstOrDefault();
-                if (usuario == null) return null;
-                response.UserName = usuario.Usuario1;
-                response.Token = GetToken(usuario);            
+            var resultado = hasher.VerifyHashedPassword(usuario, usuario.Pass, model.Password);
+            if (resultado == PasswordVerificationResult.Failed) return null;
+            if (resultado == PasswordVerificationResult.SuccessRehashNeeded)
+            {
+                usuario.Pass = hasher.HashPassword(usuario, model.Password);
+                await db.SaveChangesAsync();
+            }
 
-            return response;
+            return new UserResponse { UserName = usuario.Usuario1, Token = GetToken(usuario) };
         }
 
         private string GetToken(Usuario usuario)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-
             var llave = Encoding.ASCII.GetBytes(_appSettings.Secreto);
-
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(
-
-                    new Claim[]
-                        {
-                            new Claim(ClaimTypes.NameIdentifier, usuario.Usuario1),
-                        }
-                    ),
+                Subject = new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, usuario.Usuario1)]),
                 Expires = DateTime.UtcNow.AddDays(60),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(llave),SecurityAlgorithms.HmacSha256Signature)
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(llave), SecurityAlgorithms.HmacSha256Signature)
             };
-
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+            return tokenHandler.WriteToken(tokenHandler.CreateToken(tokenDescriptor));
         }
     }
 }

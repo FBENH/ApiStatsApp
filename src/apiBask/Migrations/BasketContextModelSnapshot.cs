@@ -391,9 +391,9 @@ namespace apiBask.Migrations
 
                     b.Property<string>("Pass")
                         .IsRequired()
-                        .HasMaxLength(64)
+                        .HasMaxLength(100)
                         .IsUnicode(false)
-                        .HasColumnType("varchar(64)")
+                        .HasColumnType("varchar(100)")
                         .HasColumnName("pass");
 
                     b.HasKey("Usuario1");

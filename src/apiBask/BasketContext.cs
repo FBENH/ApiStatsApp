@@ -228,8 +228,9 @@ public partial class BasketContext : DbContext
             entity.Property(e => e.Id)
                 .ValueGeneratedOnAdd()
                 .HasColumnName("id");
+            // Hash de PasswordHasher (PBKDF2), que ocupa 84 caracteres.
             entity.Property(e => e.Pass)
-                .HasMaxLength(64)
+                .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("pass");
         });

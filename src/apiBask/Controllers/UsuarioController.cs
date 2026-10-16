@@ -1,69 +1,29 @@
-﻿using apiBask.Models;
 using apiBask.Models.Request;
 using apiBask.Models.Response;
 using apiBask.Services;
-using apiBask.Tools;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 
 namespace apiBask.Controllers
 {
     [ApiController]
     [Route("/Usuario")]
-
-
-    public class UsuarioController : ControllerBase
+    public class UsuarioController(IUserService userService) : ControllerBase
     {
-        private IUserService _userService;
-        private readonly BasketContext _dbContext;
-        public UsuarioController(IUserService userService, BasketContext dbContext)
-        {
-            _userService = userService;
-            _dbContext = dbContext;
-        }
-
         [HttpPost("Registro")]
-        public IActionResult Crear(RegisterRequest model)
+        public async Task<IActionResult> Crear(RegisterRequest model)
         {
-            Response respuesta = new Response();
-            try
-            {
-                
-                    Usuario user = new Usuario();
-                    user.Usuario1 = model.Usuario;
-                    string sPass = Encrypt.GetSHA256(model.Pass);
-                    user.Pass = sPass;
-                    _dbContext.Usuarios.Add(user);
-                    _dbContext.SaveChanges();
-                    respuesta.exito = 1;
-                    respuesta.mensaje = "Registro con éxito.";
-                
-            }
-            catch (Exception)
-            {
-                respuesta.mensaje = "El usuario ya existe.";
-                return BadRequest(respuesta);
-            }
-            return Ok(respuesta);
+            if (!await userService.RegistrarAsync(model))
+                return BadRequest(new Response { mensaje = "El usuario ya existe." });
+            return Ok(new Response { exito = 1, mensaje = "Registro con éxito." });
         }
 
         [HttpPost("LogIn")]
-        public IActionResult LogIn(LoginRequest model)
+        public async Task<IActionResult> LogIn(LoginRequest model)
         {
-            Response respuesta = new Response();
-
-            var userResponse = _userService.Auth(model);
-
+            var userResponse = await userService.AuthAsync(model);
             if (userResponse == null)
-            {
-                respuesta.mensaje = "Usuario o contraseña incorrectos.";
-                return Ok(respuesta);
-            }
-
-            respuesta.exito = 1;
-            respuesta.data = userResponse;
-
-            return Ok(respuesta);           
+                return Ok(new Response { mensaje = "Usuario o contraseña incorrectos." });
+            return Ok(new Response { exito = 1, data = userResponse });
         }
     }
 }

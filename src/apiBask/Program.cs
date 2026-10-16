@@ -1,35 +1,32 @@
 using apiBask;
+using apiBask.Models;
 using apiBask.Models.Common;
+using apiBask.Models.Response;
 using apiBask.Models.Storage;
 using apiBask.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-string _Cors = "MiCors";
-
-// Add services to the container.
-
-
+const string Cors = "MiCors";
 
 var appSettingsSection = builder.Configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettingsSection);
 
 builder.Services.AddDbContext<BasketContext>(options =>
-options.UseSqlServer(builder.Configuration.GetConnectionString("default")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("default")));
 
 builder.Services.AddScoped<FileService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 
 builder.Services.AddControllers();
 
-//builder.Services.AddSingleton<FileService>();
-
-//JWT
+// JWT
 var appSettings = appSettingsSection.Get<AppSettings>();
 if (string.IsNullOrEmpty(appSettings?.Secreto) || appSettings.Secreto.Length < 32)
     throw new InvalidOperationException("AppSettings:Secreto tiene que estar configurado y tener al menos 32 caracteres.");
@@ -40,8 +37,6 @@ builder.Services.AddAuthentication(d =>
     d.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(d =>
 {
-    d.RequireHttpsMetadata = false;
-    d.SaveToken = true;
     d.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
@@ -51,17 +46,13 @@ builder.Services.AddAuthentication(d =>
     };
 });
 
-builder.Services.AddScoped<IUserService, UserService>();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddCors(options => {
-    options.AddPolicy(name: _Cors, builder =>
-    {
-        builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
-    });
+// El token viaja en el header Authorization (no en cookies), así que se puede aceptar cualquier origen.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: Cors, policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 });
-
 
 var app = builder.Build();
 
@@ -71,29 +62,25 @@ using (var scope = app.Services.CreateScope())
     scope.ServiceProvider.GetRequiredService<BasketContext>().Database.Migrate();
 }
 
+// Un error inesperado se registra en el log y el cliente recibe un mensaje genérico, sin detalles internos.
+app.UseExceptionHandler(errorApp => errorApp.Run(async context =>
+{
+    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+    await context.Response.WriteAsJsonAsync(new Response { mensaje = "Ocurrió un error inesperado." });
+}));
 
-
-// Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-//{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-//}
-
-
-
-
-app.UseStaticFiles();
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
+
+app.UseCors(Cors);
 
 app.UseAuthentication();
 
 app.UseAuthorization();
 
 app.MapControllers();
-
-app.UseCors(_Cors);
 
 app.Run();
 

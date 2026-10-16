@@ -12,6 +12,7 @@
 
         public string? Lugar { get; set; }
 
-        public string IdUsuario { get; set; } = null!;
+        // Ignorado: el usuario sale del token. Se acepta para no romper al front.
+        public string? IdUsuario { get; set; }
     }
 }

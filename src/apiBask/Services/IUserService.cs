@@ -1,10 +1,12 @@
-﻿using apiBask.Models.Request;
+using apiBask.Models.Request;
 using apiBask.Models.Response;
 
 namespace apiBask.Services
 {
     public interface IUserService
     {
-        public UserResponse Auth(LoginRequest model);
+        Task<bool> RegistrarAsync(RegisterRequest model);
+
+        Task<UserResponse?> AuthAsync(LoginRequest model);
     }
 }
