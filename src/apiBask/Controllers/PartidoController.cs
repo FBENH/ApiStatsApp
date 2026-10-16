@@ -131,6 +131,7 @@ namespace apiBask.Controllers
                 GanadorNombre = parcial.GanadorNombre,
                 Lugar = partido.Lugar,
                 Fecha = partido.Fecha,
+                Estado = partido.Estado,
                 Jugadores = partido.EstadisticasJugador.Select(e => new JugadorResponse
                 {
                     Id = e.JugadorId,

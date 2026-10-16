@@ -74,6 +74,7 @@ public partial class ApiTests
 
         var partido = (await LeerAsync(await p.Cliente.GetAsync($"/Partido/ConStats?id={p.Id}"))).Data;
         Assert.Equal(p.LocalId, partido.GetProperty("ganador").GetInt32());
+        Assert.Equal("Finalizado", partido.GetProperty("estado").GetString());
         var equipos = partido.GetProperty("statPartido").EnumerateArray()
             .ToDictionary(e => e.GetProperty("equipoId").GetInt32(), e => e.GetProperty("puntos").GetInt32());
         Assert.Equal(4, equipos[p.LocalId]);
