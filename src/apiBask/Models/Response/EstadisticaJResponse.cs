@@ -1,4 +1,3 @@
-﻿using apiBask.Models.Parcial;
 
 namespace apiBask.Models.Response
 {

@@ -19,9 +19,9 @@ namespace apiBask.Services
         // Devuelve false si el nombre de usuario ya existe.
         public async Task<bool> RegistrarAsync(RegisterRequest model)
         {
-            if (await db.Usuarios.AnyAsync(u => u.Usuario1 == model.Usuario)) return false;
+            if (await db.Usuarios.AnyAsync(u => u.Nombre == model.Usuario)) return false;
 
-            var usuario = new Usuario { Usuario1 = model.Usuario };
+            var usuario = new Usuario { Nombre = model.Usuario };
             usuario.Pass = hasher.HashPassword(usuario, model.Pass);
             db.Usuarios.Add(usuario);
             await db.SaveChangesAsync();
@@ -30,7 +30,7 @@ namespace apiBask.Services
 
         public async Task<UserResponse?> AuthAsync(LoginRequest model)
         {
-            var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Usuario1 == model.Usuario);
+            var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Nombre == model.Usuario);
             if (usuario == null) return null;
 
             var resultado = hasher.VerifyHashedPassword(usuario, usuario.Pass, model.Password);
@@ -41,7 +41,7 @@ namespace apiBask.Services
                 await db.SaveChangesAsync();
             }
 
-            return new UserResponse { UserName = usuario.Usuario1, Token = GetToken(usuario) };
+            return new UserResponse { UserName = usuario.Nombre, Token = GetToken(usuario) };
         }
 
         private string GetToken(Usuario usuario)
@@ -50,7 +50,10 @@ namespace apiBask.Services
             var llave = Encoding.ASCII.GetBytes(_appSettings.Secreto);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, usuario.Usuario1)]),
+                Subject = new ClaimsIdentity([
+                    new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+                    new Claim(ClaimTypes.Name, usuario.Nombre),
+                ]),
                 Expires = DateTime.UtcNow.AddDays(60),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(llave), SecurityAlgorithms.HmacSha256Signature)
             };

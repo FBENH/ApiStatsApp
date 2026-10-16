@@ -1,4 +1,4 @@
-﻿namespace apiBask.Models.Parcial
+﻿namespace apiBask.Models.Response
 {
     public class PartidoParcial
     {

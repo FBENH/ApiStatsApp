@@ -11,13 +11,14 @@ namespace apiBask.Controllers
         [HttpPost("Crear")]
         public async Task<IActionResult> CrearStat(StatJugadorRequest model)
         {
-            var esMio = await db.Partidos.AnyAsync(p => p.Id == model.PartidoId && p.IdUsuario == UsuarioActual)
-                && await db.Jugadors.AnyAsync(j => j.Id == model.JugadorId && j.IdUsuario == UsuarioActual);
+            var esMio = await db.Partidos.AnyAsync(p => p.Id == model.PartidoId && p.UsuarioId == UsuarioActual)
+                && await db.Jugadores.AnyAsync(j => j.Id == model.JugadorId && j.UsuarioId == UsuarioActual);
             if (!esMio) return Invalido("El partido y el jugador tienen que ser tuyos.");
+            if (model.EquipoId == null) return Invalido("La estadística necesita el equipo del jugador.");
 
             var estadistica = new EstadisticaJugador { PartidoId = model.PartidoId };
             estadistica.CopiarDe(model);
-            db.EstadisticaJugadors.Add(estadistica);
+            db.EstadisticasJugador.Add(estadistica);
             await db.SaveChangesAsync();
             return Exito("Se creó la estadística de jugador correctamente.");
         }
@@ -25,11 +26,11 @@ namespace apiBask.Controllers
         [HttpGet("ListarPorJugador")]
         public async Task<IActionResult> ListarPorJugador(int idJugador)
         {
-            var estadisticas = await db.EstadisticaJugadors.AsNoTracking()
-                .Where(e => e.JugadorId == idJugador && e.Jugador.IdUsuario == UsuarioActual)
+            var estadisticas = await db.EstadisticasJugador.AsNoTracking()
+                .Where(e => e.JugadorId == idJugador && e.Jugador.UsuarioId == UsuarioActual)
                 .ToListAsync();
             if (estadisticas.Count == 0) return NoEncontrado("El jugador no tiene estadísticas.");
-            return Exito("", estadisticas);
+            return Exito("", estadisticas.Select(e => e.ToResponse()));
         }
     }
 }

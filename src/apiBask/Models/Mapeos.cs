@@ -4,26 +4,27 @@ using apiBask.Models.Response;
 namespace apiBask.Models
 {
     // Copias campo a campo entre entidades, requests y responses, en un solo lugar.
+    // Los contadores que el request manda en null se guardan como 0.
     public static class Mapeos
     {
         public static void CopiarDe(this EstadisticaJugador s, StatJugadorRequest r)
         {
             s.JugadorId = r.JugadorId;
-            s.EquipoId = r.EquipoId;
-            s.Puntos = r.Puntos;
-            s.Asistencias = r.Asistencias;
-            s.Rebotes = r.Rebotes;
-            s.RebotesOfensivos = r.RebotesOfensivos;
-            s.RebotesDefensivos = r.RebotesDefensivos;
-            s.Robos = r.Robos;
-            s.Tapones = r.Tapones;
-            s.Intentos2Puntos = r.Intentos2Puntos;
-            s.Aciertos2Puntos = r.Aciertos2Puntos;
-            s.Intentos3Puntos = r.Intentos3Puntos;
-            s.Aciertos3Puntos = r.Aciertos3Puntos;
-            s.Intentos1Punto = r.Intentos1Punto;
-            s.Aciertos1Punto = r.Aciertos1Punto;
-            s.Faltas = r.Faltas;
+            s.EquipoId = r.EquipoId!.Value;
+            s.Puntos = r.Puntos ?? 0;
+            s.Asistencias = r.Asistencias ?? 0;
+            s.Rebotes = r.Rebotes ?? 0;
+            s.RebotesOfensivos = r.RebotesOfensivos ?? 0;
+            s.RebotesDefensivos = r.RebotesDefensivos ?? 0;
+            s.Robos = r.Robos ?? 0;
+            s.Tapones = r.Tapones ?? 0;
+            s.Intentos2Puntos = r.Intentos2Puntos ?? 0;
+            s.Aciertos2Puntos = r.Aciertos2Puntos ?? 0;
+            s.Intentos3Puntos = r.Intentos3Puntos ?? 0;
+            s.Aciertos3Puntos = r.Aciertos3Puntos ?? 0;
+            s.Intentos1Punto = r.Intentos1Punto ?? 0;
+            s.Aciertos1Punto = r.Aciertos1Punto ?? 0;
+            s.Faltas = r.Faltas ?? 0;
             s.Perdidas = r.Perdidas;
             s.Minutos = TimeSpan.FromMilliseconds(r.Minutos);
         }
@@ -31,20 +32,20 @@ namespace apiBask.Models
         public static void CopiarDe(this EstadisticaPartido s, StatPartidoRequest r)
         {
             s.EquipoId = r.EquipoId;
-            s.Puntos = r.Puntos;
-            s.Asistencias = r.Asistencias;
-            s.Rebotes = r.Rebotes;
-            s.RebotesOfensivos = r.RebotesOfensivos;
-            s.RebotesDefensivos = r.RebotesDefensivos;
-            s.Robos = r.Robos;
-            s.Tapones = r.Tapones;
-            s.Intentos2Puntos = r.Intentos2Puntos;
-            s.Aciertos2Puntos = r.Aciertos2Puntos;
-            s.Intentos3Puntos = r.Intentos3Puntos;
-            s.Aciertos3Puntos = r.Aciertos3Puntos;
-            s.Intentos1Punto = r.Intentos1Punto;
-            s.Aciertos1Punto = r.Aciertos1Punto;
-            s.Faltas = r.Faltas;
+            s.Puntos = r.Puntos ?? 0;
+            s.Asistencias = r.Asistencias ?? 0;
+            s.Rebotes = r.Rebotes ?? 0;
+            s.RebotesOfensivos = r.RebotesOfensivos ?? 0;
+            s.RebotesDefensivos = r.RebotesDefensivos ?? 0;
+            s.Robos = r.Robos ?? 0;
+            s.Tapones = r.Tapones ?? 0;
+            s.Intentos2Puntos = r.Intentos2Puntos ?? 0;
+            s.Aciertos2Puntos = r.Aciertos2Puntos ?? 0;
+            s.Intentos3Puntos = r.Intentos3Puntos ?? 0;
+            s.Aciertos3Puntos = r.Aciertos3Puntos ?? 0;
+            s.Intentos1Punto = r.Intentos1Punto ?? 0;
+            s.Aciertos1Punto = r.Aciertos1Punto ?? 0;
+            s.Faltas = r.Faltas ?? 0;
             s.Perdidas = r.Perdidas;
         }
 
@@ -103,6 +104,9 @@ namespace apiBask.Models
             Peso = j.Peso,
             Numero = j.Numero,
         };
+
+        public static JugadorListado ToListado(this Jugador j) =>
+            new(j.Id, j.Nombre, j.Posicion, j.Numero, j.EquipoId, j.Equipo?.Nombre, j.Foto, j.Altura, j.Peso, j.Activo);
 
         public static EquipoResponse ToResponse(this Equipo e) => new()
         {
