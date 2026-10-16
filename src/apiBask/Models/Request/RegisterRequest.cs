@@ -1,8 +1,13 @@
-﻿namespace apiBask.Models.Request
+using System.ComponentModel.DataAnnotations;
+
+namespace apiBask.Models.Request
 {
     public class RegisterRequest
     {
-        public string Usuario { get; set; }
-        public string Pass { get; set; }
+        [Required, StringLength(16)]
+        public string Usuario { get; set; } = null!;
+
+        [Required]
+        public string Pass { get; set; } = null!;
     }
 }

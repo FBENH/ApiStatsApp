@@ -121,6 +121,78 @@ public class ApiTests(ApiFactory factory)
         Assert.Single(lista.Data.EnumerateArray());
     }
 
+    [Fact]
+    public async Task Un_usuario_no_ve_ni_cambia_los_equipos_de_otro()
+    {
+        var (dueño, usuarioDueño) = await ClienteLogueadoAsync();
+        var (otro, _) = await ClienteLogueadoAsync();
+        var equipoId = await CrearEquipoRapidoAsync(dueño, usuarioDueño, "Ajeno", 1);
+
+        // Mandar el id de otro usuario ya no sirve: la lista sale del token.
+        var lista = await LeerAsync(await otro.GetAsync($"/Equipo/Listar?idUsuario={usuarioDueño}"));
+        Assert.Empty(lista.Data.EnumerateArray());
+
+        var detalle = await LeerAsync(await otro.GetAsync($"/Equipo/ListarPorId?idEquipo={equipoId}"));
+        Assert.Equal(0, detalle.Exito);
+
+        var modificar = await LeerAsync(await otro.PutAsJsonAsync("/Equipo/Modificar", new { id = equipoId, nombre = "Hackeado" }));
+        Assert.Equal(0, modificar.Exito);
+
+        await otro.DeleteAsync($"/Equipo/Eliminar?id={equipoId}");
+        var jugadores = await LeerAsync(await otro.GetAsync($"/Jugadores/ListarPorEquipo?equipoId={equipoId}"));
+        Assert.Empty(jugadores.Data.EnumerateArray());
+
+        var propio = await LeerAsync(await dueño.GetAsync($"/Equipo/ListarPorId?idEquipo={equipoId}"));
+        Assert.Equal("Ajeno", propio.Data.GetProperty("nombre").GetString());
+    }
+
+    [Fact]
+    public async Task Un_usuario_no_ve_los_partidos_de_otro_ni_usa_sus_equipos()
+    {
+        var (dueño, usuarioDueño) = await ClienteLogueadoAsync();
+        var (otro, usuarioOtro) = await ClienteLogueadoAsync();
+        var localId = await CrearEquipoRapidoAsync(dueño, usuarioDueño, "Local", 7);
+        var visitanteId = await CrearEquipoRapidoAsync(dueño, usuarioDueño, "Visitante", 8);
+        var partidoId = (await LeerAsync(await dueño.PostAsJsonAsync("/Partido/Crear", new
+        {
+            partido = new { equipoLocal = localId, equipoVisitante = visitanteId },
+            statJ = Array.Empty<object>(),
+            statP = Array.Empty<object>()
+        }))).Data.GetInt32();
+
+        var ajeno = await LeerAsync(await otro.GetAsync($"/Partido/ConStats?id={partidoId}"));
+        Assert.Equal(0, ajeno.Exito);
+
+        var conEquiposAjenos = await otro.PostAsJsonAsync("/Partido/Crear", new
+        {
+            partido = new { equipoLocal = localId, equipoVisitante = visitanteId, idUsuario = usuarioOtro },
+            statJ = Array.Empty<object>(),
+            statP = Array.Empty<object>()
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, conEquiposAjenos.StatusCode);
+    }
+
+    [Fact]
+    public async Task Subir_imagen_pide_token_y_solo_acepta_imagenes()
+    {
+        var sinToken = await factory.CreateClient().PostAsync("/Imagen/Upload", Archivo("text/plain"));
+        Assert.Equal(HttpStatusCode.Unauthorized, sinToken.StatusCode);
+
+        var (cliente, _) = await ClienteLogueadoAsync();
+        var texto = await cliente.PostAsync("/Imagen/Upload", Archivo("text/plain"));
+        Assert.Equal(HttpStatusCode.BadRequest, texto.StatusCode);
+
+        // El listado y el borrado de imágenes ya no existen.
+        Assert.Equal(HttpStatusCode.NotFound, (await cliente.GetAsync("/Imagen")).StatusCode);
+    }
+
+    private static MultipartFormDataContent Archivo(string contentType)
+    {
+        var archivo = new ByteArrayContent([1, 2, 3]);
+        archivo.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        return new MultipartFormDataContent { { archivo, "image", "archivo" } };
+    }
+
     private static async Task<int> CrearEquipoRapidoAsync(HttpClient cliente, string usuario, string nombre, params int[] numeros)
     {
         var jugadores = numeros.Select(n => new { nombre = "N/D", numero = n, usuario });

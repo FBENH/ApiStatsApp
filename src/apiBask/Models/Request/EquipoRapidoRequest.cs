@@ -1,10 +1,11 @@
-﻿namespace apiBask.Models.Request
+namespace apiBask.Models.Request
 {
     public class EquipoRapidoRequest
     {
-        public string IdUsuario { get; set; }
+        // Ignorado: el usuario sale del token. Se acepta para no romper al front.
+        public string? IdUsuario { get; set; }
 
-        public string Nombre { get; set; }
+        public string Nombre { get; set; } = null!;
 
         public List<JugadorRequest>? Jugadores { get; set; }
     }

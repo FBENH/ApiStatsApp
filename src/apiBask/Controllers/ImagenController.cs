@@ -1,52 +1,24 @@
-using apiBask.Models.Response;
 using apiBask.Models.Storage;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace apiBask.Controllers
 {
-    [ApiController]
+    // Solo se pueden subir imágenes; se muestran desde la URL pública del blob.
     [Route("/Imagen")]
-    //[Authorize]
-    public class ImagenController : ControllerBase
+    public class ImagenController(FileService fileService) : ApiControllerBase
     {
-        private readonly FileService _fileService;
-        public ImagenController(FileService fileService)
-        {
-            _fileService = fileService;
-        }
-
-        [HttpGet]
-        
-        public async Task<IActionResult> ListAllBlobs() 
-        {
-            var result = await _fileService.ListAsync();
-            return Ok(result);
-        }
+        private const long TamañoMaximo = 5 * 1024 * 1024;
 
         [HttpPost("Upload")]
-        public async Task<IActionResult> Upload(IFormFile image) 
+        [RequestSizeLimit(TamañoMaximo + 64 * 1024)]
+        public async Task<IActionResult> Upload(IFormFile image)
         {
-            var result = await _fileService.UploadAsync(image);
-            return Ok(result);
-        }
+            if (image.Length == 0 || image.Length > TamañoMaximo)
+                return Invalido("La imagen tiene que pesar menos de 5 MB.");
+            if (!FileService.EsImagen(image))
+                return Invalido("El archivo tiene que ser una imagen JPG, PNG, WEBP o GIF.");
 
-        [HttpGet]
-        [Route("filename")]
-        public async Task<IActionResult> Download(string filename) 
-        {
-            var result = await _fileService.DownloadAsync(filename);
-            return File(result.Content, result.ContentType, result.Name);
+            return Ok(await fileService.UploadAsync(image));
         }
-
-        [HttpDelete]
-        [Route("filename")]
-        public async Task<IActionResult> Delete(string filename) 
-        {
-            var result = _fileService.DeleteAsync(filename);
-            return Ok(result);
-        }            
     }
 }

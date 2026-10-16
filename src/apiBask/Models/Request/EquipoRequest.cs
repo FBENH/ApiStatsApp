@@ -11,6 +11,7 @@
 
         public string? Entrenador { get; set; }
 
-        public string Usuario { get; set; } = null!;
+        // Ignorado: el usuario sale del token. Se acepta para no romper al front.
+        public string? Usuario { get; set; }
     }
 }
