@@ -157,6 +157,7 @@ namespace apiBask.Controllers
                 : null,
             Lugar = p.Lugar,
             Fecha = p.Fecha,
+            Estado = p.Estado,
         };
     }
 }

@@ -13,14 +13,16 @@ namespace apiBask.Services
 
     public static class JugadorService
     {
-        public static Task<bool> TieneDependenciasAsync(BasketContext db, int jugadorId) =>
-            db.EstadisticasJugador.AnyAsync(d => d.JugadorId == jugadorId);
+        public static async Task<bool> TieneDependenciasAsync(BasketContext db, int jugadorId) =>
+            await db.EstadisticasJugador.AnyAsync(d => d.JugadorId == jugadorId) ||
+            await db.Jugadas.AnyAsync(d => d.JugadorId == jugadorId || d.SaleId == jugadorId);
     }
 
     public static class PartidoService
     {
         public static async Task<bool> TieneDependenciasAsync(BasketContext db, int id) =>
             await db.EstadisticasPartido.AnyAsync(d => d.PartidoId == id) ||
-            await db.EstadisticasJugador.AnyAsync(d => d.PartidoId == id);
+            await db.EstadisticasJugador.AnyAsync(d => d.PartidoId == id) ||
+            await db.Jugadas.AnyAsync(d => d.PartidoId == id);
     }
 }

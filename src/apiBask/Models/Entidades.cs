@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace apiBask.Models;
 
 public class Usuario
@@ -58,6 +60,8 @@ public class Partido
     public string? Lugar { get; set; }
     public int UsuarioId { get; set; }
     public bool Activo { get; set; }
+    public EstadoPartido Estado { get; set; }
+    public int DuracionCuartoMin { get; set; } = 10;
 
     public Equipo Local { get; set; } = null!;
     public Equipo Visitante { get; set; } = null!;
@@ -65,6 +69,48 @@ public class Partido
     public Usuario Usuario { get; set; } = null!;
     public List<EstadisticaJugador> EstadisticasJugador { get; set; } = [];
     public List<EstadisticaPartido> EstadisticasPartido { get; set; } = [];
+    public List<Jugada> Jugadas { get; set; } = [];
+}
+
+// Finalizado es 0 para que los partidos cargados de una vez (Partido/Crear) queden terminados.
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum EstadoPartido { Finalizado, EnCurso }
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum TipoJugada { Tiro, Libre, Rebote, Asistencia, Robo, Tapon, Perdida, Falta, Cambio, TiempoMuerto }
+
+// Una jugada del registro del partido. La planilla se calcula a partir de estas filas.
+public class Jugada
+{
+    // Lo genera el dispositivo que anota: si la misma jugada llega dos veces, no se duplica.
+    public Guid Id { get; set; }
+    public int PartidoId { get; set; }
+    // Orden dentro del partido.
+    public int Numero { get; set; }
+    public int Cuarto { get; set; }
+    // Tiempo que quedaba en el reloj del cuarto; null si no se lleva reloj.
+    public int? RelojMs { get; set; }
+    public TipoJugada Tipo { get; set; }
+    public int EquipoId { get; set; }
+    // Null en jugadas de equipo (por ejemplo, un rebote de equipo).
+    // En un cambio es el que entra.
+    public int? JugadorId { get; set; }
+    // Solo en cambios: el que sale.
+    public int? SaleId { get; set; }
+    // Tiros y libres.
+    public bool? Acierto { get; set; }
+    // Tiros: 2 o 3.
+    public int? Valor { get; set; }
+    // Rebotes.
+    public bool? Ofensivo { get; set; }
+    // Lugar del tiro en la cancha, de 0 a 1.
+    public double? X { get; set; }
+    public double? Y { get; set; }
+    // Por ejemplo, el tiro al que corresponde una asistencia.
+    public Guid? RelacionadaId { get; set; }
+    public DateTime CreadaEn { get; set; }
+
+    public Partido Partido { get; set; } = null!;
 }
 
 // Contadores comunes a la planilla de un jugador y a la de un equipo en un partido.

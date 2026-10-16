@@ -19,6 +19,8 @@
 
         public string? Lugar { get; set; }
 
+        public apiBask.Models.EstadoPartido Estado { get; set; }
+
         public PartidoParcial() { }
     }
 }
