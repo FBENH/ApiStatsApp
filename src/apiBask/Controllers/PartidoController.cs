@@ -1,5 +1,4 @@
 using apiBask.Models;
-using apiBask.Models.Parcial;
 using apiBask.Models.Request;
 using apiBask.Models.Response;
 using apiBask.Services;
@@ -11,44 +10,55 @@ namespace apiBask.Controllers
     [Route("/Partido")]
     public class PartidoController(BasketContext db) : ApiControllerBase
     {
-        private IQueryable<Partido> MisPartidos => db.Partidos.Where(p => p.IdUsuario == UsuarioActual);
+        private IQueryable<Partido> MisPartidos => db.Partidos.Where(p => p.UsuarioId == UsuarioActual);
 
         [HttpPost("Crear")]
         public async Task<IActionResult> CrearPartido(CrearPartidoRequest model)
         {
+            var datos = model.Partido;
+            if (datos.EquipoLocal == datos.EquipoVisitante)
+                return Invalido("El local y el visitante tienen que ser equipos distintos.");
+            if (datos.Ganador != null && datos.Ganador != datos.EquipoLocal && datos.Ganador != datos.EquipoVisitante)
+                return Invalido("El ganador tiene que ser el local o el visitante.");
+            if (model.StatJ.Any(s => s.EquipoId == null))
+                return Invalido("Cada estadística de jugador necesita su equipo.");
+            if (model.StatP.GroupBy(s => s.EquipoId).Any(g => g.Count() > 1)
+                || model.StatJ.GroupBy(s => s.JugadorId).Any(g => g.Count() > 1))
+                return Invalido("Hay estadísticas repetidas para el mismo equipo o jugador.");
+
             // Los equipos y jugadores del partido tienen que ser del usuario.
-            var equipoIds = new[] { model.Partido.EquipoLocal, model.Partido.EquipoVisitante }
+            var equipoIds = new[] { datos.EquipoLocal, datos.EquipoVisitante }
                 .Concat(model.StatP.Select(s => s.EquipoId))
-                .Concat(model.StatJ.Where(s => s.EquipoId != null).Select(s => s.EquipoId!.Value))
+                .Concat(model.StatJ.Select(s => s.EquipoId!.Value))
                 .Distinct().ToList();
             var jugadorIds = model.StatJ.Select(s => s.JugadorId).Distinct().ToList();
-            var equiposPropios = await db.Equipos.CountAsync(e => equipoIds.Contains(e.Id) && e.IdUsuario == UsuarioActual);
-            var jugadoresPropios = await db.Jugadors.CountAsync(j => jugadorIds.Contains(j.Id) && j.IdUsuario == UsuarioActual);
+            var equiposPropios = await db.Equipos.CountAsync(e => equipoIds.Contains(e.Id) && e.UsuarioId == UsuarioActual);
+            var jugadoresPropios = await db.Jugadores.CountAsync(j => jugadorIds.Contains(j.Id) && j.UsuarioId == UsuarioActual);
             if (equiposPropios != equipoIds.Count || jugadoresPropios != jugadorIds.Count)
                 return Invalido("Los equipos y jugadores del partido tienen que ser tuyos.");
 
             // Partido y estadísticas se guardan juntos en un solo SaveChanges (una transacción).
             var partido = new Partido
             {
-                IdUsuario = UsuarioActual,
-                EquipoLocal = model.Partido.EquipoLocal,
-                EquipoVisitante = model.Partido.EquipoVisitante,
-                Ganador = model.Partido.Ganador,
-                Fecha = model.Partido.Fecha,
-                Lugar = model.Partido.Lugar,
+                UsuarioId = UsuarioActual,
+                LocalId = datos.EquipoLocal,
+                VisitanteId = datos.EquipoVisitante,
+                GanadorId = datos.Ganador,
+                Fecha = datos.Fecha,
+                Lugar = datos.Lugar,
                 Activo = true,
             };
             foreach (var stat in model.StatJ)
             {
                 var estadistica = new EstadisticaJugador();
                 estadistica.CopiarDe(stat);
-                partido.EstadisticaJugadors.Add(estadistica);
+                partido.EstadisticasJugador.Add(estadistica);
             }
             foreach (var stat in model.StatP)
             {
                 var estadistica = new EstadisticaPartido();
                 estadistica.CopiarDe(stat);
-                partido.EstadisticaPartidos.Add(estadistica);
+                partido.EstadisticasPartido.Add(estadistica);
             }
             db.Partidos.Add(partido);
             await db.SaveChangesAsync();
@@ -75,8 +85,8 @@ namespace apiBask.Controllers
         public async Task<IActionResult> ListarPorId(int idPartido)
         {
             var partido = await MisPartidos.AsNoTracking()
-                .Include(p => p.EquipoLocalNavigation)
-                .Include(p => p.EquipoVisitanteNavigation)
+                .Include(p => p.Local)
+                .Include(p => p.Visitante)
                 .FirstOrDefaultAsync(p => p.Id == idPartido && p.Activo);
             if (partido == null) return NoEncontrado("No se encontró el partido.");
 
@@ -90,8 +100,8 @@ namespace apiBask.Controllers
         public async Task<IActionResult> ListarPartidos(string? idUsuario)
         {
             var partidos = await MisPartidos.AsNoTracking()
-                .Include(p => p.EquipoLocalNavigation)
-                .Include(p => p.EquipoVisitanteNavigation)
+                .Include(p => p.Local)
+                .Include(p => p.Visitante)
                 .Where(p => p.Activo)
                 .ToListAsync();
             return Exito("Se obtuvieron los partidos", partidos.Select(ParcialDe).ToList());
@@ -101,10 +111,10 @@ namespace apiBask.Controllers
         public async Task<IActionResult> PartidoConStats(int id)
         {
             var partido = await MisPartidos.AsNoTracking()
-                .Include(p => p.EstadisticaJugadors).ThenInclude(e => e.Jugador)
-                .Include(p => p.EstadisticaPartidos)
-                .Include(p => p.EquipoLocalNavigation)
-                .Include(p => p.EquipoVisitanteNavigation)
+                .Include(p => p.EstadisticasJugador).ThenInclude(e => e.Jugador)
+                .Include(p => p.EstadisticasPartido)
+                .Include(p => p.Local)
+                .Include(p => p.Visitante)
                 .AsSplitQuery()
                 .FirstOrDefaultAsync(p => p.Id == id);
             if (partido == null) return NoEncontrado("No se encontró el partido.");
@@ -115,35 +125,34 @@ namespace apiBask.Controllers
                 id = partido.Id,
                 Local = parcial.Local,
                 Visitante = parcial.Visitante,
-                EquipoLocalId = partido.EquipoLocal,
-                EquipoVisitanteId = partido.EquipoVisitante,
-                Ganador = partido.Ganador,
+                EquipoLocalId = partido.LocalId,
+                EquipoVisitanteId = partido.VisitanteId,
+                Ganador = partido.GanadorId,
                 GanadorNombre = parcial.GanadorNombre,
                 Lugar = partido.Lugar,
-                Jugadores = partido.EstadisticaJugadors.Select(e => new JugadorResponse
+                Jugadores = partido.EstadisticasJugador.Select(e => new JugadorResponse
                 {
                     Id = e.JugadorId,
                     Nombre = e.Jugador.Nombre,
                     Numero = e.Jugador.Numero,
                     estadisticasJugador = [e.ToResponse()],
                 }).ToList(),
-                StatPartido = partido.EstadisticaPartidos.Select(e => e.ToResponse()).ToList(),
+                StatPartido = partido.EstadisticasPartido.Select(e => e.ToResponse()).ToList(),
             };
             return Exito("Se obtuvo el partido", response);
         }
 
-        // El ganador siempre es el local o el visitante, así que su nombre sale de esos dos equipos.
         private static PartidoParcial ParcialDe(Partido p) => new()
         {
             id = p.Id,
-            Local = p.EquipoLocalNavigation?.Nombre,
-            EquipoLocalId = p.EquipoLocal,
-            Visitante = p.EquipoVisitanteNavigation?.Nombre,
-            EquipoVisitanteId = p.EquipoVisitante,
-            Ganador = p.Ganador,
-            GanadorNombre = p.Ganador == null ? null
-                : p.Ganador == p.EquipoLocal ? p.EquipoLocalNavigation?.Nombre
-                : p.Ganador == p.EquipoVisitante ? p.EquipoVisitanteNavigation?.Nombre
+            Local = p.Local.Nombre,
+            EquipoLocalId = p.LocalId,
+            Visitante = p.Visitante.Nombre,
+            EquipoVisitanteId = p.VisitanteId,
+            Ganador = p.GanadorId,
+            // El ganador siempre es el local o el visitante.
+            GanadorNombre = p.GanadorId == p.LocalId ? p.Local.Nombre
+                : p.GanadorId == p.VisitanteId ? p.Visitante.Nombre
                 : null,
             Lugar = p.Lugar,
             Fecha = p.Fecha,

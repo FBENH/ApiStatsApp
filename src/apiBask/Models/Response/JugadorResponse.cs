@@ -26,3 +26,10 @@
         public JugadorResponse() { }
     }
 }
+
+namespace apiBask.Models.Response
+{
+    // Fila de las listas de jugadores; Equipo es el nombre del equipo.
+    public record JugadorListado(int Id, string Nombre, string? Posicion, int Numero, int? EquipoId,
+        string? Equipo, string? Foto, decimal? Altura, decimal? Peso, bool Activo);
+}

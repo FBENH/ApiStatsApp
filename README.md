@@ -52,7 +52,7 @@ Docker must be running: the tests start a SQL Server container.
 
 ## Database changes
 
-Change the entities in `src/apiBask/Models` or `BasketContext.cs`, then add a migration:
+Change the entities in `src/apiBask/Models/Entidades.cs` or `BasketContext.cs`, then add a migration:
 
 ```bash
 dotnet tool restore

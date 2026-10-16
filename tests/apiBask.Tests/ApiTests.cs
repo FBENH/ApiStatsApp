@@ -173,6 +173,53 @@ public class ApiTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task La_lista_de_jugadores_trae_el_nombre_del_equipo()
+    {
+        var (cliente, usuario) = await ClienteLogueadoAsync();
+        await CrearEquipoRapidoAsync(cliente, usuario, "Nacional", 23);
+
+        var lista = await LeerAsync(await cliente.GetAsync("/Jugadores/Listar"));
+
+        var jugador = Assert.Single(lista.Data.EnumerateArray());
+        Assert.Equal("Nacional", jugador.GetProperty("equipo").GetString());
+        Assert.Equal(23, jugador.GetProperty("numero").GetInt32());
+    }
+
+    [Fact]
+    public async Task Un_partido_invalido_se_rechaza()
+    {
+        var (cliente, usuario) = await ClienteLogueadoAsync();
+        var equipoId = await CrearEquipoRapidoAsync(cliente, usuario, "Solo", 1);
+        var otroId = await CrearEquipoRapidoAsync(cliente, usuario, "Otro", 2);
+        var jugadorId = (await LeerAsync(await cliente.GetAsync($"/Jugadores/ListarPorEquipo?equipoId={equipoId}")))
+            .Data[0].GetProperty("id").GetInt32();
+
+        var mismoEquipo = await cliente.PostAsJsonAsync("/Partido/Crear", new
+        {
+            partido = new { equipoLocal = equipoId, equipoVisitante = equipoId },
+            statJ = Array.Empty<object>(),
+            statP = Array.Empty<object>()
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, mismoEquipo.StatusCode);
+
+        var statSinEquipo = await cliente.PostAsJsonAsync("/Partido/Crear", new
+        {
+            partido = new { equipoLocal = equipoId, equipoVisitante = otroId },
+            statJ = new[] { new { jugadorId } },
+            statP = Array.Empty<object>()
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, statSinEquipo.StatusCode);
+
+        var statRepetida = await cliente.PostAsJsonAsync("/Partido/Crear", new
+        {
+            partido = new { equipoLocal = equipoId, equipoVisitante = otroId },
+            statJ = Array.Empty<object>(),
+            statP = new[] { new { equipoId }, new { equipoId } }
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, statRepetida.StatusCode);
+    }
+
+    [Fact]
     public async Task Subir_imagen_pide_token_y_solo_acepta_imagenes()
     {
         var sinToken = await factory.CreateClient().PostAsync("/Imagen/Upload", Archivo("text/plain"));

@@ -12,7 +12,7 @@ namespace apiBask.Controllers
     public abstract class ApiControllerBase : ControllerBase
     {
         // El usuario siempre sale del token; nunca de lo que manda el cliente.
-        protected string UsuarioActual => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        protected int UsuarioActual => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         protected IActionResult Exito(string mensaje, object? data = null) =>
             Ok(new Response { exito = 1, mensaje = mensaje, data = data });

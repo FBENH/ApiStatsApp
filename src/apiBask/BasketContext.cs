@@ -1,242 +1,72 @@
-using System;
-using System.Collections.Generic;
 using apiBask.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace apiBask;
 
-public partial class BasketContext : DbContext
+public class BasketContext(DbContextOptions<BasketContext> options) : DbContext(options)
 {
-    public BasketContext(DbContextOptions<BasketContext> options)
-       : base(options)
-    {
-    }
-
-    public virtual DbSet<Equipo> Equipos { get; set; }
-
-    public virtual DbSet<EstadisticaJugador> EstadisticaJugadors { get; set; }
-
-    public virtual DbSet<EstadisticaPartido> EstadisticaPartidos { get; set; }
-
-    public virtual DbSet<Jugador> Jugadors { get; set; }
-
-    public virtual DbSet<Partido> Partidos { get; set; }
-
-    public virtual DbSet<Usuario> Usuarios { get; set; }
-
-    
+    public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<Equipo> Equipos => Set<Equipo>();
+    public DbSet<Jugador> Jugadores => Set<Jugador>();
+    public DbSet<Partido> Partidos => Set<Partido>();
+    public DbSet<EstadisticaJugador> EstadisticasJugador => Set<EstadisticaJugador>();
+    public DbSet<EstadisticaPartido> EstadisticasPartido => Set<EstadisticaPartido>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Equipo>(entity =>
+        modelBuilder.Entity<Usuario>(e =>
         {
-            entity.HasKey(e => e.Id);
-
-            entity.ToTable("Equipo");
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Activo).HasColumnName("activo");
-            entity.Property(e => e.Ciudad)
-                .HasMaxLength(50)
-                .IsUnicode(false)
-                .HasColumnName("ciudad");
-            entity.Property(e => e.Entrenador)
-                .HasMaxLength(50)
-                .IsUnicode(false)
-                .HasColumnName("entrenador");
-            entity.Property(e => e.Escudo)
-                .IsUnicode(false)
-                .HasColumnName("escudo");
-            entity.Property(e => e.IdUsuario)
-                .HasMaxLength(16)
-                .IsUnicode(false)
-                .HasColumnName("id_usuario");
-            entity.Property(e => e.Nombre)
-                .HasMaxLength(30)
-                .IsUnicode(false)
-                .HasColumnName("nombre");
-
-            entity.HasOne(d => d.IdUsuarioNavigation).WithMany(p => p.Equipos)
-                .HasForeignKey(d => d.IdUsuario)
-                .OnDelete(DeleteBehavior.ClientSetNull);
-        });
-
-        modelBuilder.Entity<EstadisticaJugador>(entity =>
-        {
-            entity.HasKey(e => new { e.JugadorId, e.PartidoId });
-
-            entity.ToTable("EstadisticaJugador");
-
-            entity.Property(e => e.JugadorId).HasColumnName("jugador_id");
-            entity.Property(e => e.PartidoId).HasColumnName("partido_id");
-            entity.Property(e => e.Aciertos1Punto).HasColumnName("aciertos_1_punto");
-            entity.Property(e => e.Aciertos2Puntos).HasColumnName("aciertos_2_puntos");
-            entity.Property(e => e.Aciertos3Puntos).HasColumnName("aciertos_3_puntos");
-            entity.Property(e => e.Asistencias).HasColumnName("asistencias");
-            entity.Property(e => e.EquipoId).HasColumnName("equipo_id");
-            entity.Property(e => e.Faltas).HasColumnName("faltas");
-            entity.Property(e => e.Intentos1Punto).HasColumnName("intentos_1_punto");
-            entity.Property(e => e.Intentos2Puntos).HasColumnName("intentos_2_puntos");
-            entity.Property(e => e.Intentos3Puntos).HasColumnName("intentos_3_puntos");
-            entity.Property(e => e.Minutos).HasColumnName("minutos");
-            entity.Property(e => e.Perdidas).HasColumnName("perdidas");
-            entity.Property(e => e.Puntos).HasColumnName("puntos");
-            entity.Property(e => e.Rebotes).HasColumnName("rebotes");
-            entity.Property(e => e.RebotesDefensivos).HasColumnName("rebotes_defensivos");
-            entity.Property(e => e.RebotesOfensivos).HasColumnName("rebotes_ofensivos");
-            entity.Property(e => e.Robos).HasColumnName("robos");
-            entity.Property(e => e.Tapones).HasColumnName("tapones");
-
-            entity.HasOne(d => d.Equipo).WithMany(p => p.EstadisticaJugadors)
-                .HasForeignKey(d => d.EquipoId);
-
-            entity.HasOne(d => d.Jugador).WithMany(p => p.EstadisticaJugadors)
-                .HasForeignKey(d => d.JugadorId)
-                .OnDelete(DeleteBehavior.ClientSetNull);
-
-            entity.HasOne(d => d.Partido).WithMany(p => p.EstadisticaJugadors)
-                .HasForeignKey(d => d.PartidoId)
-                .OnDelete(DeleteBehavior.ClientSetNull);
-        });
-
-        modelBuilder.Entity<EstadisticaPartido>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-
-            entity.ToTable("EstadisticaPartido");
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Aciertos1Punto).HasColumnName("aciertos_1_punto");
-            entity.Property(e => e.Aciertos2Puntos).HasColumnName("aciertos_2_puntos");
-            entity.Property(e => e.Aciertos3Puntos).HasColumnName("aciertos_3_puntos");
-            entity.Property(e => e.Asistencias).HasColumnName("asistencias");
-            entity.Property(e => e.EquipoId).HasColumnName("equipo_id");
-            entity.Property(e => e.Faltas).HasColumnName("faltas");
-            entity.Property(e => e.Intentos1Punto).HasColumnName("intentos_1_punto");
-            entity.Property(e => e.Intentos2Puntos).HasColumnName("intentos_2_puntos");
-            entity.Property(e => e.Intentos3Puntos).HasColumnName("intentos_3_puntos");
-            entity.Property(e => e.PartidoId).HasColumnName("partido_id");
-            entity.Property(e => e.Perdidas).HasColumnName("perdidas");
-            entity.Property(e => e.Puntos).HasColumnName("puntos");
-            entity.Property(e => e.Rebotes).HasColumnName("rebotes");
-            entity.Property(e => e.RebotesDefensivos).HasColumnName("rebotes_defensivos");
-            entity.Property(e => e.RebotesOfensivos).HasColumnName("rebotes_ofensivos");
-            entity.Property(e => e.Robos).HasColumnName("robos");
-            entity.Property(e => e.Tapones).HasColumnName("tapones");
-
-            entity.HasOne(d => d.Equipo).WithMany(p => p.EstadisticaPartidos)
-                .HasForeignKey(d => d.EquipoId)
-                .OnDelete(DeleteBehavior.ClientSetNull);
-
-            entity.HasOne(d => d.Partido).WithMany(p => p.EstadisticaPartidos)
-                .HasForeignKey(d => d.PartidoId)
-                .OnDelete(DeleteBehavior.ClientSetNull);
-        });
-
-        modelBuilder.Entity<Jugador>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-
-            entity.ToTable("Jugador");
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Activo).HasColumnName("activo");
-            entity.Property(e => e.Altura)
-                .HasColumnType("decimal(18, 0)")
-                .HasColumnName("altura");
-            entity.Property(e => e.Equipo)
-                .HasMaxLength(30)
-                .IsUnicode(false)
-                .HasColumnName("equipo");
-            entity.Property(e => e.EquipoId).HasColumnName("equipo_id");
-            entity.Property(e => e.Foto)
-                .IsUnicode(false)
-                .HasColumnName("foto");
-            entity.Property(e => e.IdUsuario)
-                .HasMaxLength(16)
-                .IsUnicode(false)
-                .HasColumnName("id_usuario");
-            entity.Property(e => e.Nombre)
-                .HasMaxLength(30)
-                .IsUnicode(false)
-                .HasColumnName("nombre");
-            entity.Property(e => e.Numero).HasColumnName("numero");
-            entity.Property(e => e.Peso)
-                .HasColumnType("decimal(18, 0)")
-                .HasColumnName("peso");
-            entity.Property(e => e.Posicion)
-                .HasMaxLength(20)
-                .IsUnicode(false)
-                .HasColumnName("posicion");
-
-            entity.HasOne(d => d.EquipoNavigation).WithMany(p => p.Jugadors)
-                .HasForeignKey(d => d.EquipoId);
-
-            entity.HasOne(d => d.IdUsuarioNavigation).WithMany(p => p.Jugadors)
-                .HasForeignKey(d => d.IdUsuario)
-                .OnDelete(DeleteBehavior.ClientSetNull);
-        });
-
-        modelBuilder.Entity<Partido>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-
-            entity.ToTable("Partido");
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Activo).HasColumnName("activo");
-            entity.Property(e => e.EquipoLocal).HasColumnName("equipo_local");
-            entity.Property(e => e.EquipoVisitante).HasColumnName("equipo_visitante");
-            entity.Property(e => e.Fecha)
-                .HasColumnType("datetime")
-                .HasColumnName("fecha");
-            entity.Property(e => e.Ganador).HasColumnName("ganador");
-            entity.Property(e => e.IdUsuario)
-                .HasMaxLength(16)
-                .IsUnicode(false)
-                .HasColumnName("id_usuario");
-            entity.Property(e => e.Lugar)
-                .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("lugar");
-
-            entity.HasOne(d => d.EquipoLocalNavigation).WithMany(p => p.PartidoEquipoLocalNavigations)
-                .HasForeignKey(d => d.EquipoLocal);
-
-            entity.HasOne(d => d.EquipoVisitanteNavigation).WithMany(p => p.PartidoEquipoVisitanteNavigations)
-                .HasForeignKey(d => d.EquipoVisitante);
-
-            entity.HasOne(d => d.IdUsuarioNavigation).WithMany(p => p.Partidos)
-                .HasForeignKey(d => d.IdUsuario)
-                .OnDelete(DeleteBehavior.ClientSetNull);
-        });
-
-        modelBuilder.Entity<Usuario>(entity =>
-        {
-            entity.HasKey(e => e.Usuario1);
-
-            entity.ToTable("Usuario");
-
-            entity.Property(e => e.Usuario1)
-                .HasMaxLength(16)
-                .IsUnicode(false)
-                .HasColumnName("usuario");
-            entity.Property(e => e.Email)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("email");
-            entity.Property(e => e.Id)
-                .ValueGeneratedOnAdd()
-                .HasColumnName("id");
+            e.Property(u => u.Nombre).HasMaxLength(16);
+            e.HasIndex(u => u.Nombre).IsUnique();
             // Hash de PasswordHasher (PBKDF2), que ocupa 84 caracteres.
-            entity.Property(e => e.Pass)
-                .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("pass");
+            e.Property(u => u.Pass).HasMaxLength(100);
+            e.Property(u => u.Email).HasMaxLength(255);
         });
 
-        OnModelCreatingPartial(modelBuilder);
-    }
+        modelBuilder.Entity<Equipo>(e =>
+        {
+            e.Property(x => x.Nombre).HasMaxLength(30);
+            e.Property(x => x.Ciudad).HasMaxLength(50);
+            e.Property(x => x.Entrenador).HasMaxLength(50);
+            e.Property(x => x.Escudo).HasMaxLength(500);
+        });
 
-    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+        modelBuilder.Entity<Jugador>(e =>
+        {
+            e.Property(x => x.Nombre).HasMaxLength(30);
+            e.Property(x => x.Posicion).HasMaxLength(20);
+            e.Property(x => x.Foto).HasMaxLength(500);
+            e.Property(x => x.Altura).HasPrecision(5, 1);
+            e.Property(x => x.Peso).HasPrecision(5, 1);
+        });
+
+        modelBuilder.Entity<Partido>(e =>
+        {
+            e.Property(x => x.Lugar).HasMaxLength(100);
+            e.HasOne(x => x.Local).WithMany().HasForeignKey(x => x.LocalId);
+            e.HasOne(x => x.Visitante).WithMany().HasForeignKey(x => x.VisitanteId);
+            e.HasOne(x => x.Ganador).WithMany().HasForeignKey(x => x.GanadorId);
+        });
+
+        modelBuilder.Entity<EstadisticaJugador>(e =>
+        {
+            e.HasKey(x => new { x.PartidoId, x.JugadorId });
+            e.HasOne(x => x.Partido).WithMany(p => p.EstadisticasJugador).HasForeignKey(x => x.PartidoId);
+            e.HasOne(x => x.Equipo).WithMany().HasForeignKey(x => x.EquipoId);
+            e.HasOne(x => x.Jugador).WithMany(j => j.Estadisticas).HasForeignKey(x => x.JugadorId);
+        });
+
+        modelBuilder.Entity<EstadisticaPartido>(e =>
+        {
+            e.HasKey(x => new { x.PartidoId, x.EquipoId });
+            e.HasOne(x => x.Partido).WithMany(p => p.EstadisticasPartido).HasForeignKey(x => x.PartidoId);
+            e.HasOne(x => x.Equipo).WithMany(eq => eq.EstadisticasPartido).HasForeignKey(x => x.EquipoId);
+        });
+
+        // Nada se borra en cascada: lo que tiene historial se da de baja con Activo = false.
+        foreach (var fk in modelBuilder.Model.GetEntityTypes().SelectMany(t => t.GetForeignKeys()))
+        {
+            fk.DeleteBehavior = DeleteBehavior.Restrict;
+        }
+    }
 }

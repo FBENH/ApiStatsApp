@@ -26,405 +26,320 @@ namespace apiBask.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
+                        .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("Activo")
-                        .HasColumnType("bit")
-                        .HasColumnName("activo");
+                        .HasColumnType("bit");
 
                     b.Property<string>("Ciudad")
                         .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("ciudad");
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Entrenador")
                         .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("entrenador");
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Escudo")
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(max)")
-                        .HasColumnName("escudo");
-
-                    b.Property<string>("IdUsuario")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(16)")
-                        .HasColumnName("id_usuario");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(30)")
-                        .HasColumnName("nombre");
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IdUsuario");
+                    b.HasIndex("UsuarioId");
 
-                    b.ToTable("Equipo", (string)null);
+                    b.ToTable("Equipos");
                 });
 
             modelBuilder.Entity("apiBask.Models.EstadisticaJugador", b =>
                 {
-                    b.Property<int>("JugadorId")
-                        .HasColumnType("int")
-                        .HasColumnName("jugador_id");
-
                     b.Property<int>("PartidoId")
-                        .HasColumnType("int")
-                        .HasColumnName("partido_id");
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Aciertos1Punto")
-                        .HasColumnType("int")
-                        .HasColumnName("aciertos_1_punto");
+                    b.Property<int>("JugadorId")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Aciertos2Puntos")
-                        .HasColumnType("int")
-                        .HasColumnName("aciertos_2_puntos");
+                    b.Property<int>("Aciertos1Punto")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Aciertos3Puntos")
-                        .HasColumnType("int")
-                        .HasColumnName("aciertos_3_puntos");
+                    b.Property<int>("Aciertos2Puntos")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Asistencias")
-                        .HasColumnType("int")
-                        .HasColumnName("asistencias");
+                    b.Property<int>("Aciertos3Puntos")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("EquipoId")
-                        .HasColumnType("int")
-                        .HasColumnName("equipo_id");
+                    b.Property<int>("Asistencias")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Faltas")
-                        .HasColumnType("int")
-                        .HasColumnName("faltas");
+                    b.Property<int>("EquipoId")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Intentos1Punto")
-                        .HasColumnType("int")
-                        .HasColumnName("intentos_1_punto");
+                    b.Property<int>("Faltas")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Intentos2Puntos")
-                        .HasColumnType("int")
-                        .HasColumnName("intentos_2_puntos");
+                    b.Property<int>("Intentos1Punto")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Intentos3Puntos")
-                        .HasColumnType("int")
-                        .HasColumnName("intentos_3_puntos");
+                    b.Property<int>("Intentos2Puntos")
+                        .HasColumnType("int");
 
-                    b.Property<TimeSpan?>("Minutos")
-                        .HasColumnType("time")
-                        .HasColumnName("minutos");
+                    b.Property<int>("Intentos3Puntos")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Perdidas")
-                        .HasColumnType("int")
-                        .HasColumnName("perdidas");
+                    b.Property<TimeSpan>("Minutos")
+                        .HasColumnType("time");
 
-                    b.Property<int?>("Puntos")
-                        .HasColumnType("int")
-                        .HasColumnName("puntos");
+                    b.Property<int>("Perdidas")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Rebotes")
-                        .HasColumnType("int")
-                        .HasColumnName("rebotes");
+                    b.Property<int>("Puntos")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("RebotesDefensivos")
-                        .HasColumnType("int")
-                        .HasColumnName("rebotes_defensivos");
+                    b.Property<int>("Rebotes")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("RebotesOfensivos")
-                        .HasColumnType("int")
-                        .HasColumnName("rebotes_ofensivos");
+                    b.Property<int>("RebotesDefensivos")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Robos")
-                        .HasColumnType("int")
-                        .HasColumnName("robos");
+                    b.Property<int>("RebotesOfensivos")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Tapones")
-                        .HasColumnType("int")
-                        .HasColumnName("tapones");
+                    b.Property<int>("Robos")
+                        .HasColumnType("int");
 
-                    b.HasKey("JugadorId", "PartidoId");
+                    b.Property<int>("Tapones")
+                        .HasColumnType("int");
+
+                    b.HasKey("PartidoId", "JugadorId");
 
                     b.HasIndex("EquipoId");
 
-                    b.HasIndex("PartidoId");
+                    b.HasIndex("JugadorId");
 
-                    b.ToTable("EstadisticaJugador", (string)null);
+                    b.ToTable("EstadisticasJugador");
                 });
 
             modelBuilder.Entity("apiBask.Models.EstadisticaPartido", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("Aciertos1Punto")
-                        .HasColumnType("int")
-                        .HasColumnName("aciertos_1_punto");
-
-                    b.Property<int?>("Aciertos2Puntos")
-                        .HasColumnType("int")
-                        .HasColumnName("aciertos_2_puntos");
-
-                    b.Property<int?>("Aciertos3Puntos")
-                        .HasColumnType("int")
-                        .HasColumnName("aciertos_3_puntos");
-
-                    b.Property<int?>("Asistencias")
-                        .HasColumnType("int")
-                        .HasColumnName("asistencias");
+                    b.Property<int>("PartidoId")
+                        .HasColumnType("int");
 
                     b.Property<int>("EquipoId")
-                        .HasColumnType("int")
-                        .HasColumnName("equipo_id");
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Faltas")
-                        .HasColumnType("int")
-                        .HasColumnName("faltas");
+                    b.Property<int>("Aciertos1Punto")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Intentos1Punto")
-                        .HasColumnType("int")
-                        .HasColumnName("intentos_1_punto");
+                    b.Property<int>("Aciertos2Puntos")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Intentos2Puntos")
-                        .HasColumnType("int")
-                        .HasColumnName("intentos_2_puntos");
+                    b.Property<int>("Aciertos3Puntos")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Intentos3Puntos")
-                        .HasColumnType("int")
-                        .HasColumnName("intentos_3_puntos");
+                    b.Property<int>("Asistencias")
+                        .HasColumnType("int");
 
-                    b.Property<int>("PartidoId")
-                        .HasColumnType("int")
-                        .HasColumnName("partido_id");
+                    b.Property<int>("Faltas")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Perdidas")
-                        .HasColumnType("int")
-                        .HasColumnName("perdidas");
+                    b.Property<int>("Intentos1Punto")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Puntos")
-                        .HasColumnType("int")
-                        .HasColumnName("puntos");
+                    b.Property<int>("Intentos2Puntos")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Rebotes")
-                        .HasColumnType("int")
-                        .HasColumnName("rebotes");
+                    b.Property<int>("Intentos3Puntos")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("RebotesDefensivos")
-                        .HasColumnType("int")
-                        .HasColumnName("rebotes_defensivos");
+                    b.Property<int>("Perdidas")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("RebotesOfensivos")
-                        .HasColumnType("int")
-                        .HasColumnName("rebotes_ofensivos");
+                    b.Property<int>("Puntos")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Robos")
-                        .HasColumnType("int")
-                        .HasColumnName("robos");
+                    b.Property<int>("Rebotes")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("Tapones")
-                        .HasColumnType("int")
-                        .HasColumnName("tapones");
+                    b.Property<int>("RebotesDefensivos")
+                        .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.Property<int>("RebotesOfensivos")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Robos")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Tapones")
+                        .HasColumnType("int");
+
+                    b.HasKey("PartidoId", "EquipoId");
 
                     b.HasIndex("EquipoId");
 
-                    b.HasIndex("PartidoId");
-
-                    b.ToTable("EstadisticaPartido", (string)null);
+                    b.ToTable("EstadisticasPartido");
                 });
 
             modelBuilder.Entity("apiBask.Models.Jugador", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
+                        .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("Activo")
-                        .HasColumnType("bit")
-                        .HasColumnName("activo");
+                        .HasColumnType("bit");
 
                     b.Property<decimal?>("Altura")
-                        .HasColumnType("decimal(18, 0)")
-                        .HasColumnName("altura");
-
-                    b.Property<string>("Equipo")
-                        .HasMaxLength(30)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(30)")
-                        .HasColumnName("equipo");
+                        .HasPrecision(5, 1)
+                        .HasColumnType("decimal(5,1)");
 
                     b.Property<int?>("EquipoId")
-                        .HasColumnType("int")
-                        .HasColumnName("equipo_id");
+                        .HasColumnType("int");
 
                     b.Property<string>("Foto")
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(max)")
-                        .HasColumnName("foto");
-
-                    b.Property<string>("IdUsuario")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(16)")
-                        .HasColumnName("id_usuario");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(30)")
-                        .HasColumnName("nombre");
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<int>("Numero")
-                        .HasColumnType("int")
-                        .HasColumnName("numero");
+                        .HasColumnType("int");
 
                     b.Property<decimal?>("Peso")
-                        .HasColumnType("decimal(18, 0)")
-                        .HasColumnName("peso");
+                        .HasPrecision(5, 1)
+                        .HasColumnType("decimal(5,1)");
 
                     b.Property<string>("Posicion")
                         .HasMaxLength(20)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("posicion");
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("EquipoId");
 
-                    b.HasIndex("IdUsuario");
+                    b.HasIndex("UsuarioId");
 
-                    b.ToTable("Jugador", (string)null);
+                    b.ToTable("Jugadores");
                 });
 
             modelBuilder.Entity("apiBask.Models.Partido", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
+                        .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("Activo")
-                        .HasColumnType("bit")
-                        .HasColumnName("activo");
-
-                    b.Property<int?>("EquipoLocal")
-                        .HasColumnType("int")
-                        .HasColumnName("equipo_local");
-
-                    b.Property<int?>("EquipoVisitante")
-                        .HasColumnType("int")
-                        .HasColumnName("equipo_visitante");
+                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("Fecha")
-                        .HasColumnType("datetime")
-                        .HasColumnName("fecha");
+                        .HasColumnType("datetime2");
 
-                    b.Property<int?>("Ganador")
-                        .HasColumnType("int")
-                        .HasColumnName("ganador");
+                    b.Property<int?>("GanadorId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("IdUsuario")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(16)")
-                        .HasColumnName("id_usuario");
+                    b.Property<int>("LocalId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Lugar")
                         .HasMaxLength(100)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("lugar");
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("VisitanteId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EquipoLocal");
+                    b.HasIndex("GanadorId");
 
-                    b.HasIndex("EquipoVisitante");
+                    b.HasIndex("LocalId");
 
-                    b.HasIndex("IdUsuario");
+                    b.HasIndex("UsuarioId");
 
-                    b.ToTable("Partido", (string)null);
+                    b.HasIndex("VisitanteId");
+
+                    b.ToTable("Partidos");
                 });
 
             modelBuilder.Entity("apiBask.Models.Usuario", b =>
                 {
-                    b.Property<string>("Usuario1")
-                        .HasMaxLength(16)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(16)")
-                        .HasColumnName("usuario");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
                         .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("email");
+                        .HasColumnType("nvarchar(255)");
 
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<string>("Pass")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("pass");
+                        .HasColumnType("nvarchar(100)");
 
-                    b.HasKey("Usuario1");
+                    b.HasKey("Id");
 
-                    b.ToTable("Usuario", (string)null);
+                    b.HasIndex("Nombre")
+                        .IsUnique();
+
+                    b.ToTable("Usuarios");
                 });
 
             modelBuilder.Entity("apiBask.Models.Equipo", b =>
                 {
-                    b.HasOne("apiBask.Models.Usuario", "IdUsuarioNavigation")
+                    b.HasOne("apiBask.Models.Usuario", "Usuario")
                         .WithMany("Equipos")
-                        .HasForeignKey("IdUsuario")
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("IdUsuarioNavigation");
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("apiBask.Models.EstadisticaJugador", b =>
                 {
                     b.HasOne("apiBask.Models.Equipo", "Equipo")
-                        .WithMany("EstadisticaJugadors")
-                        .HasForeignKey("EquipoId");
+                        .WithMany()
+                        .HasForeignKey("EquipoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("apiBask.Models.Jugador", "Jugador")
-                        .WithMany("EstadisticaJugadors")
+                        .WithMany("Estadisticas")
                         .HasForeignKey("JugadorId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("apiBask.Models.Partido", "Partido")
-                        .WithMany("EstadisticaJugadors")
+                        .WithMany("EstadisticasJugador")
                         .HasForeignKey("PartidoId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Equipo");
@@ -437,13 +352,15 @@ namespace apiBask.Migrations
             modelBuilder.Entity("apiBask.Models.EstadisticaPartido", b =>
                 {
                     b.HasOne("apiBask.Models.Equipo", "Equipo")
-                        .WithMany("EstadisticaPartidos")
+                        .WithMany("EstadisticasPartido")
                         .HasForeignKey("EquipoId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("apiBask.Models.Partido", "Partido")
-                        .WithMany("EstadisticaPartidos")
+                        .WithMany("EstadisticasPartido")
                         .HasForeignKey("PartidoId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Equipo");
@@ -453,72 +370,80 @@ namespace apiBask.Migrations
 
             modelBuilder.Entity("apiBask.Models.Jugador", b =>
                 {
-                    b.HasOne("apiBask.Models.Equipo", "EquipoNavigation")
-                        .WithMany("Jugadors")
-                        .HasForeignKey("EquipoId");
+                    b.HasOne("apiBask.Models.Equipo", "Equipo")
+                        .WithMany("Jugadores")
+                        .HasForeignKey("EquipoId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("apiBask.Models.Usuario", "IdUsuarioNavigation")
-                        .WithMany("Jugadors")
-                        .HasForeignKey("IdUsuario")
+                    b.HasOne("apiBask.Models.Usuario", "Usuario")
+                        .WithMany("Jugadores")
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("EquipoNavigation");
+                    b.Navigation("Equipo");
 
-                    b.Navigation("IdUsuarioNavigation");
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("apiBask.Models.Partido", b =>
                 {
-                    b.HasOne("apiBask.Models.Equipo", "EquipoLocalNavigation")
-                        .WithMany("PartidoEquipoLocalNavigations")
-                        .HasForeignKey("EquipoLocal");
+                    b.HasOne("apiBask.Models.Equipo", "Ganador")
+                        .WithMany()
+                        .HasForeignKey("GanadorId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("apiBask.Models.Equipo", "EquipoVisitanteNavigation")
-                        .WithMany("PartidoEquipoVisitanteNavigations")
-                        .HasForeignKey("EquipoVisitante");
-
-                    b.HasOne("apiBask.Models.Usuario", "IdUsuarioNavigation")
-                        .WithMany("Partidos")
-                        .HasForeignKey("IdUsuario")
+                    b.HasOne("apiBask.Models.Equipo", "Local")
+                        .WithMany()
+                        .HasForeignKey("LocalId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("EquipoLocalNavigation");
+                    b.HasOne("apiBask.Models.Usuario", "Usuario")
+                        .WithMany("Partidos")
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.Navigation("EquipoVisitanteNavigation");
+                    b.HasOne("apiBask.Models.Equipo", "Visitante")
+                        .WithMany()
+                        .HasForeignKey("VisitanteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.Navigation("IdUsuarioNavigation");
+                    b.Navigation("Ganador");
+
+                    b.Navigation("Local");
+
+                    b.Navigation("Usuario");
+
+                    b.Navigation("Visitante");
                 });
 
             modelBuilder.Entity("apiBask.Models.Equipo", b =>
                 {
-                    b.Navigation("EstadisticaJugadors");
+                    b.Navigation("EstadisticasPartido");
 
-                    b.Navigation("EstadisticaPartidos");
-
-                    b.Navigation("Jugadors");
-
-                    b.Navigation("PartidoEquipoLocalNavigations");
-
-                    b.Navigation("PartidoEquipoVisitanteNavigations");
+                    b.Navigation("Jugadores");
                 });
 
             modelBuilder.Entity("apiBask.Models.Jugador", b =>
                 {
-                    b.Navigation("EstadisticaJugadors");
+                    b.Navigation("Estadisticas");
                 });
 
             modelBuilder.Entity("apiBask.Models.Partido", b =>
                 {
-                    b.Navigation("EstadisticaJugadors");
+                    b.Navigation("EstadisticasJugador");
 
-                    b.Navigation("EstadisticaPartidos");
+                    b.Navigation("EstadisticasPartido");
                 });
 
             modelBuilder.Entity("apiBask.Models.Usuario", b =>
                 {
                     b.Navigation("Equipos");
 
-                    b.Navigation("Jugadors");
+                    b.Navigation("Jugadores");
 
                     b.Navigation("Partidos");
                 });
