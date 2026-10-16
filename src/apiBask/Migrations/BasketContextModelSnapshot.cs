@@ -22,6 +22,29 @@ namespace apiBask.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("apiBask.Models.Division", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<int>("TemporadaId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TemporadaId");
+
+                    b.ToTable("Divisiones");
+                });
+
             modelBuilder.Entity("apiBask.Models.Equipo", b =>
                 {
                     b.Property<int>("Id")
@@ -188,6 +211,26 @@ namespace apiBask.Migrations
                     b.ToTable("EstadisticasPartido");
                 });
 
+            modelBuilder.Entity("apiBask.Models.Inscripcion", b =>
+                {
+                    b.Property<int>("TemporadaId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EquipoId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DivisionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("TemporadaId", "EquipoId");
+
+                    b.HasIndex("DivisionId");
+
+                    b.HasIndex("EquipoId");
+
+                    b.ToTable("Inscripciones");
+                });
+
             modelBuilder.Entity("apiBask.Models.Jugada", b =>
                 {
                     b.Property<Guid>("Id")
@@ -303,6 +346,41 @@ namespace apiBask.Migrations
                     b.ToTable("Jugadores");
                 });
 
+            modelBuilder.Entity("apiBask.Models.Liga", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("Ligas");
+                });
+
             modelBuilder.Entity("apiBask.Models.Partido", b =>
                 {
                     b.Property<int>("Id")
@@ -326,12 +404,18 @@ namespace apiBask.Migrations
                     b.Property<int?>("GanadorId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("Jornada")
+                        .HasColumnType("int");
+
                     b.Property<int>("LocalId")
                         .HasColumnType("int");
 
                     b.Property<string>("Lugar")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("TemporadaId")
+                        .HasColumnType("int");
 
                     b.Property<int>("UsuarioId")
                         .HasColumnType("int");
@@ -345,11 +429,36 @@ namespace apiBask.Migrations
 
                     b.HasIndex("LocalId");
 
+                    b.HasIndex("TemporadaId");
+
                     b.HasIndex("UsuarioId");
 
                     b.HasIndex("VisitanteId");
 
                     b.ToTable("Partidos");
+                });
+
+            modelBuilder.Entity("apiBask.Models.Temporada", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("LigaId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LigaId");
+
+                    b.ToTable("Temporadas");
                 });
 
             modelBuilder.Entity("apiBask.Models.Usuario", b =>
@@ -380,6 +489,17 @@ namespace apiBask.Migrations
                         .IsUnique();
 
                     b.ToTable("Usuarios");
+                });
+
+            modelBuilder.Entity("apiBask.Models.Division", b =>
+                {
+                    b.HasOne("apiBask.Models.Temporada", "Temporada")
+                        .WithMany("Divisiones")
+                        .HasForeignKey("TemporadaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Temporada");
                 });
 
             modelBuilder.Entity("apiBask.Models.Equipo", b =>
@@ -439,6 +559,32 @@ namespace apiBask.Migrations
                     b.Navigation("Partido");
                 });
 
+            modelBuilder.Entity("apiBask.Models.Inscripcion", b =>
+                {
+                    b.HasOne("apiBask.Models.Division", "Division")
+                        .WithMany()
+                        .HasForeignKey("DivisionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("apiBask.Models.Equipo", "Equipo")
+                        .WithMany()
+                        .HasForeignKey("EquipoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("apiBask.Models.Temporada", "Temporada")
+                        .WithMany("Inscripciones")
+                        .HasForeignKey("TemporadaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Division");
+
+                    b.Navigation("Equipo");
+
+                    b.Navigation("Temporada");
+                });
+
             modelBuilder.Entity("apiBask.Models.Jugada", b =>
                 {
                     b.HasOne("apiBask.Models.Equipo", null)
@@ -484,6 +630,17 @@ namespace apiBask.Migrations
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("apiBask.Models.Liga", b =>
+                {
+                    b.HasOne("apiBask.Models.Usuario", "Usuario")
+                        .WithMany("Ligas")
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
+                });
+
             modelBuilder.Entity("apiBask.Models.Partido", b =>
                 {
                     b.HasOne("apiBask.Models.Equipo", "Ganador")
@@ -496,6 +653,11 @@ namespace apiBask.Migrations
                         .HasForeignKey("LocalId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("apiBask.Models.Temporada", "Temporada")
+                        .WithMany("Partidos")
+                        .HasForeignKey("TemporadaId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("apiBask.Models.Usuario", "Usuario")
                         .WithMany("Partidos")
@@ -513,9 +675,22 @@ namespace apiBask.Migrations
 
                     b.Navigation("Local");
 
+                    b.Navigation("Temporada");
+
                     b.Navigation("Usuario");
 
                     b.Navigation("Visitante");
+                });
+
+            modelBuilder.Entity("apiBask.Models.Temporada", b =>
+                {
+                    b.HasOne("apiBask.Models.Liga", "Liga")
+                        .WithMany("Temporadas")
+                        .HasForeignKey("LigaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Liga");
                 });
 
             modelBuilder.Entity("apiBask.Models.Equipo", b =>
@@ -530,6 +705,11 @@ namespace apiBask.Migrations
                     b.Navigation("Estadisticas");
                 });
 
+            modelBuilder.Entity("apiBask.Models.Liga", b =>
+                {
+                    b.Navigation("Temporadas");
+                });
+
             modelBuilder.Entity("apiBask.Models.Partido", b =>
                 {
                     b.Navigation("EstadisticasJugador");
@@ -539,11 +719,22 @@ namespace apiBask.Migrations
                     b.Navigation("Jugadas");
                 });
 
+            modelBuilder.Entity("apiBask.Models.Temporada", b =>
+                {
+                    b.Navigation("Divisiones");
+
+                    b.Navigation("Inscripciones");
+
+                    b.Navigation("Partidos");
+                });
+
             modelBuilder.Entity("apiBask.Models.Usuario", b =>
                 {
                     b.Navigation("Equipos");
 
                     b.Navigation("Jugadores");
+
+                    b.Navigation("Ligas");
 
                     b.Navigation("Partidos");
                 });

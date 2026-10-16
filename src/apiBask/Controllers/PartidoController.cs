@@ -70,6 +70,19 @@ namespace apiBask.Controllers
         public async Task<IActionResult> EliminarPartido(int id, string? userId)
         {
             var partido = await MisPartidos.FirstOrDefaultAsync(p => p.Id == id);
+            if (partido is { TemporadaId: not null, Estado: not EstadoPartido.Programado })
+            {
+                // Un partido de liga no desaparece del fixture: se borra lo anotado y vuelve a estar programado.
+                await using var transaccion = await db.Database.BeginTransactionAsync();
+                await db.Jugadas.Where(j => j.PartidoId == id).ExecuteDeleteAsync();
+                await db.EstadisticasJugador.Where(e => e.PartidoId == id).ExecuteDeleteAsync();
+                await db.EstadisticasPartido.Where(e => e.PartidoId == id).ExecuteDeleteAsync();
+                partido.Estado = EstadoPartido.Programado;
+                partido.GanadorId = null;
+                await db.SaveChangesAsync();
+                await transaccion.CommitAsync();
+                return Exito("Se borró lo anotado y el partido volvió al fixture.");
+            }
             if (partido != null)
             {
                 if (await PartidoService.TieneDependenciasAsync(db, id))
@@ -102,7 +115,8 @@ namespace apiBask.Controllers
             var partidos = await MisPartidos.AsNoTracking()
                 .Include(p => p.Local)
                 .Include(p => p.Visitante)
-                .Where(p => p.Activo)
+                // Los partidos del fixture que todavía no se jugaron se ven en la liga.
+                .Where(p => p.Activo && p.Estado != EstadoPartido.Programado)
                 .ToListAsync();
             return Exito("Se obtuvieron los partidos", partidos.Select(ParcialDe).ToList());
         }

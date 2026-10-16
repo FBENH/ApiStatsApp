@@ -9,6 +9,8 @@ namespace apiBask.Models.Request
         public DateTime? Fecha { get; set; }
         public string? Lugar { get; set; }
         public int DuracionCuartoMin { get; set; } = 10;
+        // Si se manda, se empieza a anotar ese partido del fixture de una liga en lugar de crear uno nuevo.
+        public int? PartidoId { get; set; }
     }
 
     // Se usa para recibir y para devolver jugadas.
