@@ -60,6 +60,7 @@ public class BasketContext(DbContextOptions<BasketContext> options) : DbContext(
             e.Property(x => x.Slug).HasMaxLength(60);
             e.HasIndex(x => x.Slug).IsUnique();
             e.Property(x => x.Descripcion).HasMaxLength(500);
+            e.Property(x => x.CreadaEn).HasDefaultValueSql("SYSUTCDATETIME()");
             e.HasOne(x => x.Usuario).WithMany(u => u.Ligas).HasForeignKey(x => x.UsuarioId);
         });
 

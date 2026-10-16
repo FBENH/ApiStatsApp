@@ -7,7 +7,7 @@ namespace apiBask.Controllers
 {
     [ApiController]
     [Route("/Usuario")]
-    public class UsuarioController(IUserService userService) : ControllerBase
+    public class UsuarioController(IUserService userService, LigaDemo demo) : ControllerBase
     {
         [HttpPost("Registro")]
         public async Task<IActionResult> Crear(RegisterRequest model)
@@ -20,6 +20,8 @@ namespace apiBask.Controllers
         [HttpPost("LogIn")]
         public async Task<IActionResult> LogIn(LoginRequest model)
         {
+            // Quien entra con la cuenta de la demo ve los datos de ejemplo limpios si ya tocaba reiniciarlos.
+            await demo.ReiniciarSiHaceFaltaAsync(HttpContext.RequestServices, model.Usuario);
             var userResponse = await userService.AuthAsync(model);
             if (userResponse == null)
                 return Ok(new Response { mensaje = "Usuario o contraseña incorrectos." });

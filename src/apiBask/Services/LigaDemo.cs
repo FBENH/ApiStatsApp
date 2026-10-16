@@ -15,6 +15,8 @@ namespace apiBask.Services
         public string? Clave { get; set; }
         public double SegundosEntreJugadas { get; set; } = 4;
         public double MinutosEntrePartidos { get; set; } = 5;
+        // Cada cuántas horas se borra todo lo de la cuenta de la demo y se arma la liga de nuevo (0 = nunca).
+        public double HorasEntreReinicios { get; set; } = 24;
     }
 
     // Liga de demo que se juega sola: la crea si no existe y simula sus partidos de a uno, en orden del fixture.
@@ -32,6 +34,8 @@ namespace apiBask.Services
         private DateTime _ultimaVisita = DateTime.MinValue;
         private readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte> _mirando = new();
         private readonly SemaphoreSlim _despertar = new(0, 1);
+        // El reinicio y la revisión de la liga no pueden correr a la vez.
+        private readonly SemaphoreSlim _ocupada = new(1, 1);
 
         public bool EsLaDemo(string? slug) => opciones.Activa && slug == opciones.Slug;
 
@@ -94,7 +98,13 @@ namespace apiBask.Services
                         continue;
                     }
                     await using var scope = scopes.CreateAsyncScope();
-                    await RevisarAsync(scope.ServiceProvider, primeraVuelta);
+                    await _ocupada.WaitAsync(stoppingToken);
+                    try
+                    {
+                        await ReiniciarSiCorrespondeAsync(scope.ServiceProvider);
+                        await RevisarAsync(scope.ServiceProvider, primeraVuelta);
+                    }
+                    finally { _ocupada.Release(); }
                     primeraVuelta = false;
                 }
                 catch (Exception e) when (e is not OperationCanceledException)
@@ -103,6 +113,47 @@ namespace apiBask.Services
                 }
                 await _despertar.WaitAsync(Intervalo, stoppingToken);
             }
+        }
+
+        // Lo que los visitantes cambiaron con la cuenta de la demo dura hasta el próximo reinicio.
+        // Se llama mientras alguien mira la liga y cuando alguien entra con la cuenta de la demo.
+        public async Task ReiniciarSiHaceFaltaAsync(IServiceProvider servicios, string usuario)
+        {
+            if (!opciones.Activa || usuario != opciones.Usuario) return;
+            await _ocupada.WaitAsync();
+            try { await ReiniciarSiCorrespondeAsync(servicios); }
+            // Si falla, se entra igual con los datos que haya.
+            catch (Exception e) { log.LogError(e, "No se pudieron reiniciar los datos de la demo."); }
+            finally { _ocupada.Release(); }
+        }
+
+        private async Task ReiniciarSiCorrespondeAsync(IServiceProvider servicios)
+        {
+            if (opciones.HorasEntreReinicios <= 0) return;
+            var db = servicios.GetRequiredService<BasketContext>();
+            var creada = await db.Ligas.Where(l => l.Slug == opciones.Slug).Select(l => (DateTime?)l.CreadaEn).FirstOrDefaultAsync();
+            if (creada == null || creada > DateTime.UtcNow.AddHours(-opciones.HorasEntreReinicios)) return;
+
+            var usuarioId = await db.Usuarios.Where(u => u.Nombre == opciones.Usuario).Select(u => u.Id).FirstAsync();
+            await using (var transaccion = await db.Database.BeginTransactionAsync())
+            {
+                var partidos = db.Partidos.Where(p => p.UsuarioId == usuarioId);
+                await db.Jugadas.Where(j => partidos.Any(p => p.Id == j.PartidoId)).ExecuteDeleteAsync();
+                await db.EstadisticasJugador.Where(e => partidos.Any(p => p.Id == e.PartidoId)).ExecuteDeleteAsync();
+                await db.EstadisticasPartido.Where(e => partidos.Any(p => p.Id == e.PartidoId)).ExecuteDeleteAsync();
+                await partidos.ExecuteDeleteAsync();
+                await db.Inscripciones.Where(i => i.Temporada.Liga.UsuarioId == usuarioId).ExecuteDeleteAsync();
+                await db.Divisiones.Where(d => d.Temporada.Liga.UsuarioId == usuarioId).ExecuteDeleteAsync();
+                await db.Temporadas.Where(t => t.Liga.UsuarioId == usuarioId).ExecuteDeleteAsync();
+                await db.Ligas.Where(l => l.UsuarioId == usuarioId).ExecuteDeleteAsync();
+                await db.Jugadores.Where(j => j.UsuarioId == usuarioId).ExecuteDeleteAsync();
+                await db.Equipos.Where(e => e.UsuarioId == usuarioId).ExecuteDeleteAsync();
+                await transaccion.CommitAsync();
+            }
+            _jugando = false;
+            _termino = null;
+            await CrearAsync(servicios, db);
+            log.LogInformation("Se reiniciaron los datos de la cuenta de la demo.");
         }
 
         private async Task FijarClaveAsync(IServiceProvider servicios)

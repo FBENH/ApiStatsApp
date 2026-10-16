@@ -44,6 +44,7 @@ Requirements: .NET 10 SDK and Docker.
 | `Demo:Usuario` / `Demo:Clave` | Account that owns the demo league. On startup the account gets this password, even if it already existed. Without a password nobody can log in with it |
 | `Demo:SegundosEntreJugadas` | Pause between simulated plays (default `4`, about 25 minutes per game) |
 | `Demo:MinutosEntrePartidos` | Pause between demo games (default `5`) |
+| `Demo:HorasEntreReinicios` | Every this many hours everything owned by the demo account is deleted and the demo league is built again, so visitors can try the demo account freely. Checked while someone watches the league and when someone logs in with the demo account (default `24`, `0` turns it off) |
 
 In Azure App Service, set them as App Settings using `__` instead of `:` (for example `AppSettings__Secreto`).
 

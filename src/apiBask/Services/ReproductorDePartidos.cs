@@ -61,8 +61,8 @@ namespace apiBask.Services
 
                 await using var final = scopes.CreateAsyncScope();
                 var contexto = final.ServiceProvider.GetRequiredService<BasketContext>();
-                var terminado = await contexto.Partidos.FirstAsync(p => p.Id == simulacion.PartidoId, cancelar);
-                if (terminado.Estado != EstadoPartido.EnCurso) return;
+                var terminado = await contexto.Partidos.FirstOrDefaultAsync(p => p.Id == simulacion.PartidoId, cancelar);
+                if (terminado is not { Estado: EstadoPartido.EnCurso }) return;
                 await final.ServiceProvider.GetRequiredService<RegistroDePartido>()
                     .FinalizarAsync(terminado, (simulacion.Jugadas[^1].Cuarto, 0));
             }

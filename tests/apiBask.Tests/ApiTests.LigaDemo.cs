@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using apiBask.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -74,5 +75,59 @@ public partial class ApiTests
         await ArrancarConClaveAsync("segunda");
         Assert.Equal(1, await IngresarAsync("segunda"));
         Assert.Equal(0, await IngresarAsync("primera"));
+    }
+
+    [Fact]
+    public async Task Los_datos_de_la_cuenta_de_la_demo_se_reinician_al_entrar_si_pasaron_las_horas()
+    {
+        await using var conDemo = factory.WithWebHostBuilder(b =>
+        {
+            b.UseSetting("Demo:Activa", "true");
+            b.UseSetting("Demo:Slug", "demo-reinicio");
+            b.UseSetting("Demo:Usuario", "demo-reinicio");
+            b.UseSetting("Demo:Clave", "clave-demo");
+            b.UseSetting("Demo:SegundosEntreJugadas", "0");
+        });
+        var cliente = conDemo.CreateClient();
+        var cancelar = TestContext.Current.CancellationToken;
+        async Task<int> IngresarAsync() =>
+            (await LeerAsync(await cliente.PostAsJsonAsync("/Usuario/LogIn", new { usuario = "demo-reinicio", password = "clave-demo" }, cancelar))).Exito;
+
+        // Una visita arma la liga.
+        for (var intento = 0; intento < 30; intento++)
+        {
+            if ((await cliente.GetAsync("/publico/ligas/demo-reinicio", cancelar)).IsSuccessStatusCode) break;
+            await Task.Delay(500, cancelar);
+        }
+        Assert.Equal(1, await IngresarAsync());
+
+        int ligaAntes;
+        using (var scope = conDemo.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<BasketContext>();
+            var liga = await db.Ligas.FirstAsync(l => l.Slug == "demo-reinicio", cancelar);
+            ligaAntes = liga.Id;
+            // Un visitante agrega un equipo.
+            db.Equipos.Add(new Equipo { Nombre = "Del visitante", UsuarioId = liga.UsuarioId, Activo = true });
+            await db.SaveChangesAsync(cancelar);
+
+            // Antes de las 24 horas no se toca nada.
+            Assert.Equal(1, await IngresarAsync());
+            Assert.True(await db.Equipos.AnyAsync(e => e.Nombre == "Del visitante", cancelar));
+
+            await db.Ligas.Where(l => l.Id == liga.Id).ExecuteUpdateAsync(l => l.SetProperty(x => x.CreadaEn, DateTime.UtcNow.AddHours(-25)), cancelar);
+        }
+
+        Assert.Equal(1, await IngresarAsync());
+
+        using (var scope = conDemo.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<BasketContext>();
+            Assert.False(await db.Equipos.AnyAsync(e => e.Nombre == "Del visitante", cancelar));
+            var liga = await db.Ligas.Include(l => l.Temporadas).FirstAsync(l => l.Slug == "demo-reinicio", cancelar);
+            Assert.NotEqual(ligaAntes, liga.Id);
+            Assert.Equal(6, await db.Equipos.CountAsync(e => e.UsuarioId == liga.UsuarioId, cancelar));
+            Assert.Equal(30, await db.Partidos.CountAsync(p => p.TemporadaId == liga.Temporadas[0].Id, cancelar));
+        }
     }
 }
