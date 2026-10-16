@@ -241,6 +241,19 @@ public partial class ApiTests(ApiFactory factory)
         return new MultipartFormDataContent { { archivo, "image", "archivo" } };
     }
 
+    [Fact]
+    public async Task Crear_jugador_devuelve_su_id()
+    {
+        var (cliente, usuario) = await ClienteLogueadoAsync();
+        var equipoId = await CrearEquipoRapidoAsync(cliente, usuario, "Peñarol", 4);
+
+        var crear = await LeerAsync(await cliente.PostAsJsonAsync("/Jugadores/Crear", new { nombre = "#12", numero = 12, equipoId }));
+
+        var jugador = await LeerAsync(await cliente.GetAsync($"/Jugadores/ListarPorId?id={crear.Data.GetInt32()}"));
+        Assert.Equal(12, jugador.Data.GetProperty("numero").GetInt32());
+        Assert.Equal(equipoId, jugador.Data.GetProperty("equipoId").GetInt32());
+    }
+
     private static async Task<int> CrearEquipoRapidoAsync(HttpClient cliente, string usuario, string nombre, params int[] numeros)
     {
         var jugadores = numeros.Select(n => new { nombre = "N/D", numero = n, usuario });
