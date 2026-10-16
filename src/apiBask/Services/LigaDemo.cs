@@ -1,4 +1,5 @@
 using apiBask.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace apiBask.Services
@@ -9,7 +10,8 @@ namespace apiBask.Services
         public bool Activa { get; set; }
         public string Slug { get; set; } = "liga-demo";
         public string Usuario { get; set; } = "demo";
-        // Si no se configura, la cuenta de la demo queda con una clave al azar y nadie puede entrar con ella.
+        // Clave de la cuenta de la demo (Demo__Clave). Al arrancar se le pone esta clave aunque la cuenta ya existiera.
+        // Si no se configura, la cuenta queda con una clave al azar y nadie puede entrar con ella.
         public string? Clave { get; set; }
         public double SegundosEntreJugadas { get; set; } = 4;
         public double MinutosEntrePartidos { get; set; } = 5;
@@ -74,10 +76,17 @@ namespace apiBask.Services
         {
             if (!opciones.Activa) return;
             var primeraVuelta = true;
+            var claveLista = opciones.Clave == null;
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
+                    if (!claveLista)
+                    {
+                        await using var conClave = scopes.CreateAsyncScope();
+                        await FijarClaveAsync(conClave.ServiceProvider);
+                        claveLista = true;
+                    }
                     // Sin nadie mirando no se hace nada; el partido que esté en curso termina solo.
                     if (!HayPublico)
                     {
@@ -94,6 +103,21 @@ namespace apiBask.Services
                 }
                 await _despertar.WaitAsync(Intervalo, stoppingToken);
             }
+        }
+
+        private async Task FijarClaveAsync(IServiceProvider servicios)
+        {
+            var db = servicios.GetRequiredService<BasketContext>();
+            var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Nombre == opciones.Usuario);
+            if (usuario == null)
+            {
+                await servicios.GetRequiredService<IUserService>().RegistrarAsync(new() { Usuario = opciones.Usuario, Pass = opciones.Clave! });
+                return;
+            }
+            var hasher = servicios.GetRequiredService<IPasswordHasher<Usuario>>();
+            if (hasher.VerifyHashedPassword(usuario, usuario.Pass, opciones.Clave!) != PasswordVerificationResult.Failed) return;
+            usuario.Pass = hasher.HashPassword(usuario, opciones.Clave!);
+            await db.SaveChangesAsync();
         }
 
         private async Task RevisarAsync(IServiceProvider servicios, bool alArrancar)

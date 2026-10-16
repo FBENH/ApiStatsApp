@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -44,5 +45,34 @@ public partial class ApiTests
         var filas = posiciones[0].GetProperty("filas").EnumerateArray().ToList();
         Assert.Equal(6, filas.Count);
         Assert.Equal(2, filas.Sum(f => f.GetProperty("jugados").GetInt32()));
+    }
+
+    [Fact]
+    public async Task La_cuenta_de_la_demo_usa_la_clave_configurada_aunque_ya_existiera()
+    {
+        async Task<int> IngresarAsync(string clave) =>
+            (await LeerAsync(await factory.CreateClient()
+                .PostAsJsonAsync("/Usuario/LogIn", new { usuario = "demo-clave", password = clave }, TestContext.Current.CancellationToken))).Exito;
+
+        async Task ArrancarConClaveAsync(string clave)
+        {
+            await using var conDemo = factory.WithWebHostBuilder(b =>
+            {
+                b.UseSetting("Demo:Activa", "true");
+                b.UseSetting("Demo:Slug", "demo-clave");
+                b.UseSetting("Demo:Usuario", "demo-clave");
+                b.UseSetting("Demo:Clave", clave);
+            });
+            conDemo.CreateClient();
+            for (var intento = 0; intento < 20 && await IngresarAsync(clave) != 1; intento++)
+                await Task.Delay(500, TestContext.Current.CancellationToken);
+        }
+
+        await ArrancarConClaveAsync("primera");
+        Assert.Equal(1, await IngresarAsync("primera"));
+
+        await ArrancarConClaveAsync("segunda");
+        Assert.Equal(1, await IngresarAsync("segunda"));
+        Assert.Equal(0, await IngresarAsync("primera"));
     }
 }
