@@ -15,6 +15,28 @@ namespace apiBask.Services
 
         public void Encolar(Simulacion simulacion) => _cola.Writer.TryWrite(simulacion);
 
+        // Pone en curso un partido programado y encola su simulación con los jugadores activos de los dos equipos.
+        // Devuelve cuántas jugadas tiene, o null si a algún equipo le faltan jugadores.
+        public async Task<int?> EmpezarAsync(BasketContext db, AvisosEnVivo avisos, Partido partido, TimeSpan pausa)
+        {
+            var jugadores = await db.Jugadores.AsNoTracking()
+                .Where(j => (j.EquipoId == partido.LocalId || j.EquipoId == partido.VisitanteId) && j.Activo)
+                .OrderBy(j => j.Numero)
+                .Select(j => new { j.Id, j.EquipoId })
+                .ToListAsync();
+            var locales = jugadores.Where(j => j.EquipoId == partido.LocalId).Select(j => j.Id).ToList();
+            var visitantes = jugadores.Where(j => j.EquipoId == partido.VisitanteId).Select(j => j.Id).ToList();
+            if (locales.Count == 0 || visitantes.Count == 0) return null;
+
+            partido.Estado = EstadoPartido.EnCurso;
+            partido.Fecha ??= DateTime.UtcNow.Date;
+            await db.SaveChangesAsync();
+            await avisos.PartidoAsync(partido);
+            var jugadas = Simulador.Generar(partido, locales, visitantes, Random.Shared);
+            Encolar(new(partido.Id, jugadas, pausa));
+            return jugadas.Count;
+        }
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             // Cada partido se reproduce por su cuenta, así puede haber varios en vivo a la vez.

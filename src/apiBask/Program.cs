@@ -28,6 +28,8 @@ builder.Services.AddScoped<AvisosEnVivo>();
 builder.Services.AddScoped<RegistroDePartido>();
 builder.Services.AddSingleton<ReproductorDePartidos>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<ReproductorDePartidos>());
+builder.Services.AddSingleton(builder.Configuration.GetSection("Demo").Get<OpcionesDemo>() ?? new OpcionesDemo());
+builder.Services.AddHostedService<LigaDemo>();
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
 
