@@ -91,6 +91,8 @@ public class Liga
     public string Slug { get; set; } = null!;
     public string? Descripcion { get; set; }
     public int UsuarioId { get; set; }
+    // La liga de demo se rearma cada tantas horas a partir de esta fecha.
+    public DateTime CreadaEn { get; set; } = DateTime.UtcNow;
 
     public Usuario Usuario { get; set; } = null!;
     public List<Temporada> Temporadas { get; set; } = [];

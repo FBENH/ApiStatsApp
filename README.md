@@ -41,9 +41,10 @@ Requirements: .NET 10 SDK and Docker.
 | `Storage:Container` | Blob container name (default `apibasket`) |
 | `Demo:Activa` | `true` creates the demo league and simulates its games one after another, only while someone is watching it (default `false`) |
 | `Demo:Slug` | Public address of the demo league (default `liga-demo`) |
-| `Demo:Usuario` / `Demo:Clave` | Account that owns the demo league. Without a password nobody can log in with it |
+| `Demo:Usuario` / `Demo:Clave` | Account that owns the demo league. On startup the account gets this password, even if it already existed. Without a password nobody can log in with it |
 | `Demo:SegundosEntreJugadas` | Pause between simulated plays (default `4`, about 25 minutes per game) |
 | `Demo:MinutosEntrePartidos` | Pause between demo games (default `5`) |
+| `Demo:HorasEntreReinicios` | Every this many hours everything owned by the demo account is deleted and the demo league is built again, so visitors can try the demo account freely. Checked while someone watches the league and when someone logs in with the demo account (default `24`, `0` turns it off) |
 
 In Azure App Service, set them as App Settings using `__` instead of `:` (for example `AppSettings__Secreto`).
 
@@ -52,8 +53,8 @@ In Azure App Service, set them as App Settings using `__` instead of `:` (for ex
 The demo runs on the free tiers of Azure:
 
 1. **Database**: an Azure SQL Database with the free offer. Copy its ADO.NET connection string.
-2. **API**: an App Service on Linux, plan F1, runtime .NET 10. In *Configuration*:
-   - App settings `ConnectionStrings__default`, `AppSettings__Secreto` and `Demo__Activa=true`.
+2. **API**: an App Service (Windows works), plan F1, runtime .NET 10. In *Configuration*:
+   - App settings `ConnectionStrings__default`, `AppSettings__Secreto`, `Demo__Activa=true` and, to log in as the demo account, `Demo__Clave`.
    - Turn on *Web sockets* for SignalR.
    - On the database server, allow access from Azure services.
 3. **GitHub**: create the environment `prod` and add the secret `AZURE_WEBAPP_PUBLISH_PROFILE` to it (downloaded from the App Service overview; basic auth publishing credentials must be enabled). The `Deploy to Azure` workflow publishes every merge to `main` to the app `statsappapi` (override it with `AZURE_WEBAPP_NAME`, as a secret of the environment or a variable).
