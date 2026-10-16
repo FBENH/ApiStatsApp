@@ -52,8 +52,8 @@ In Azure App Service, set them as App Settings using `__` instead of `:` (for ex
 The demo runs on the free tiers of Azure:
 
 1. **Database**: an Azure SQL Database with the free offer. Copy its ADO.NET connection string.
-2. **API**: an App Service on Linux, plan F1, runtime .NET 10. In *Configuration*:
-   - App settings `ConnectionStrings__default`, `AppSettings__Secreto` `Demo__Activa=true` and, to log in as the demo account, `Demo__Clave`.
+2. **API**: an App Service (Windows works), plan F1, runtime .NET 10. In *Configuration*:
+   - App settings `ConnectionStrings__default`, `AppSettings__Secreto`, `Demo__Activa=true` and, to log in as the demo account, `Demo__Clave`.
    - Turn on *Web sockets* for SignalR.
    - On the database server, allow access from Azure services.
 3. **GitHub**: create the environment `prod` and add the secret `AZURE_WEBAPP_PUBLISH_PROFILE` to it (downloaded from the App Service overview; basic auth publishing credentials must be enabled). The `Deploy to Azure` workflow publishes every merge to `main` to the app `statsappapi` (override it with `AZURE_WEBAPP_NAME`, as a secret of the environment or a variable).
