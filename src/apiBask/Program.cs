@@ -63,7 +63,7 @@ builder.Services.AddSwaggerGen();
 // El token viaja en el header Authorization (no en cookies), así que se puede aceptar cualquier origen.
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: Cors, policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+    options.AddPolicy(name: Cors, policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod().WithExposedHeaders("Retry-After"));
 });
 
 var app = builder.Build();
