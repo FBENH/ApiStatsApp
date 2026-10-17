@@ -94,17 +94,17 @@ namespace apiBask.Services
             var jugadas = await db.Jugadas.AsNoTracking().Where(j => j.PartidoId == partido.Id).ToListAsync();
             var planilla = Planilla.Calcular(partido, jugadas, fin);
 
-            // Las filas viejas se reemplazan dentro de la misma transacción.
-            await using var transaccion = await db.Database.BeginTransactionAsync();
-            await db.EstadisticasJugador.Where(e => e.PartidoId == partido.Id).ExecuteDeleteAsync();
-            await db.EstadisticasPartido.Where(e => e.PartidoId == partido.Id).ExecuteDeleteAsync();
             db.EstadisticasJugador.AddRange(planilla.Jugadores);
             db.EstadisticasPartido.AddRange(planilla.Equipos);
             var local = planilla.Equipos.First(e => e.EquipoId == partido.LocalId).Puntos;
             var visitante = planilla.Equipos.First(e => e.EquipoId == partido.VisitanteId).Puntos;
             partido.GanadorId = local > visitante ? partido.LocalId : visitante > local ? partido.VisitanteId : null;
-            await db.SaveChangesAsync();
-            await transaccion.CommitAsync();
+            // Las filas viejas se reemplazan dentro de la misma transacción.
+            await db.EnTransaccionAsync(async () =>
+            {
+                await db.EstadisticasJugador.Where(e => e.PartidoId == partido.Id).ExecuteDeleteAsync();
+                await db.EstadisticasPartido.Where(e => e.PartidoId == partido.Id).ExecuteDeleteAsync();
+            });
         }
     }
 }
