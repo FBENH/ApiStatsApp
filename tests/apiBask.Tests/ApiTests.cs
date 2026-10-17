@@ -52,6 +52,14 @@ public partial class ApiTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Salud_de_la_base_responde_sin_token()
+    {
+        var response = await factory.CreateClient().GetAsync("/salud/base");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Los_endpoints_de_datos_piden_token()
     {
         var response = await factory.CreateClient().GetAsync("/Equipo/Listar?idUsuario=nadie");

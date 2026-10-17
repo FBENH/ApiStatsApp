@@ -135,9 +135,12 @@ namespace apiBask.Services
             if (creada == null || creada > DateTime.UtcNow.AddHours(-opciones.HorasEntreReinicios)) return;
 
             var usuarioId = await db.Usuarios.Where(u => u.Nombre == opciones.Usuario).Select(u => u.Id).FirstAsync();
-            await using (var transaccion = await db.Database.BeginTransactionAsync())
+            await db.EnTransaccionAsync(async () =>
             {
                 var partidos = db.Partidos.Where(p => p.UsuarioId == usuarioId);
+                // Primero se bloquean los partidos: si hay uno simulándose, su próxima jugada espera a que termine
+                // el reinicio (y después falla porque el partido ya no existe) en lugar de colarse entre los borrados.
+                await partidos.ExecuteUpdateAsync(p => p.SetProperty(x => x.Activo, false));
                 await db.Jugadas.Where(j => partidos.Any(p => p.Id == j.PartidoId)).ExecuteDeleteAsync();
                 await db.EstadisticasJugador.Where(e => partidos.Any(p => p.Id == e.PartidoId)).ExecuteDeleteAsync();
                 await db.EstadisticasPartido.Where(e => partidos.Any(p => p.Id == e.PartidoId)).ExecuteDeleteAsync();
@@ -148,8 +151,7 @@ namespace apiBask.Services
                 await db.Ligas.Where(l => l.UsuarioId == usuarioId).ExecuteDeleteAsync();
                 await db.Jugadores.Where(j => j.UsuarioId == usuarioId).ExecuteDeleteAsync();
                 await db.Equipos.Where(e => e.UsuarioId == usuarioId).ExecuteDeleteAsync();
-                await transaccion.CommitAsync();
-            }
+            });
             _jugando = false;
             _termino = null;
             await CrearAsync(servicios, db);

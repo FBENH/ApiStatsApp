@@ -73,14 +73,14 @@ namespace apiBask.Controllers
             if (partido is { TemporadaId: not null, Estado: not EstadoPartido.Programado })
             {
                 // Un partido de liga no desaparece del fixture: se borra lo anotado y vuelve a estar programado.
-                await using var transaccion = await db.Database.BeginTransactionAsync();
-                await db.Jugadas.Where(j => j.PartidoId == id).ExecuteDeleteAsync();
-                await db.EstadisticasJugador.Where(e => e.PartidoId == id).ExecuteDeleteAsync();
-                await db.EstadisticasPartido.Where(e => e.PartidoId == id).ExecuteDeleteAsync();
                 partido.Estado = EstadoPartido.Programado;
                 partido.GanadorId = null;
-                await db.SaveChangesAsync();
-                await transaccion.CommitAsync();
+                await db.EnTransaccionAsync(async () =>
+                {
+                    await db.Jugadas.Where(j => j.PartidoId == id).ExecuteDeleteAsync();
+                    await db.EstadisticasJugador.Where(e => e.PartidoId == id).ExecuteDeleteAsync();
+                    await db.EstadisticasPartido.Where(e => e.PartidoId == id).ExecuteDeleteAsync();
+                });
                 await avisos.PartidoAsync(partido);
                 return Exito("Se borró lo anotado y el partido volvió al fixture.");
             }

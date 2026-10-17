@@ -69,13 +69,14 @@ namespace apiBask.Controllers
             if (await partidos.AnyAsync(p => p.Estado != EstadoPartido.Programado))
                 return Invalido("La liga tiene partidos jugados y no se puede borrar.");
 
-            await using var transaccion = await db.Database.BeginTransactionAsync();
-            await partidos.ExecuteDeleteAsync();
-            await db.Inscripciones.Where(i => i.Temporada.LigaId == id).ExecuteDeleteAsync();
-            await db.Divisiones.Where(d => d.Temporada.LigaId == id).ExecuteDeleteAsync();
-            await db.Temporadas.Where(t => t.LigaId == id).ExecuteDeleteAsync();
-            await db.Ligas.Where(l => l.Id == id).ExecuteDeleteAsync();
-            await transaccion.CommitAsync();
+            await db.EnTransaccionAsync(async () =>
+            {
+                await partidos.ExecuteDeleteAsync();
+                await db.Inscripciones.Where(i => i.Temporada.LigaId == id).ExecuteDeleteAsync();
+                await db.Divisiones.Where(d => d.Temporada.LigaId == id).ExecuteDeleteAsync();
+                await db.Temporadas.Where(t => t.LigaId == id).ExecuteDeleteAsync();
+                await db.Ligas.Where(l => l.Id == id).ExecuteDeleteAsync();
+            });
             return Exito("Se eliminó la liga.");
         }
 
@@ -139,11 +140,9 @@ namespace apiBask.Controllers
         {
             var division = await db.Divisiones.FirstOrDefaultAsync(d => d.Id == id && d.Temporada.Liga.UsuarioId == UsuarioActual);
             if (division == null) return NoEncontrado("No se encontró la división.");
-            await using var transaccion = await db.Database.BeginTransactionAsync();
-            await db.Inscripciones.Where(i => i.DivisionId == id).ExecuteUpdateAsync(s => s.SetProperty(i => i.DivisionId, (int?)null));
             db.Divisiones.Remove(division);
-            await db.SaveChangesAsync();
-            await transaccion.CommitAsync();
+            await db.EnTransaccionAsync(() =>
+                db.Inscripciones.Where(i => i.DivisionId == id).ExecuteUpdateAsync(s => s.SetProperty(i => i.DivisionId, (int?)null)));
             return Exito("Se eliminó la división.");
         }
 

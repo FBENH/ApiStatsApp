@@ -5,6 +5,7 @@ using apiBask.Models.Response;
 using apiBask.Models.Storage;
 using apiBask.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -17,8 +18,11 @@ const string Cors = "MiCors";
 var appSettingsSection = builder.Configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettingsSection);
 
+// La base gratis de Azure se pausa sola cuando nadie la usa y tarda hasta un minuto en despertar.
+// Mientras despierta rechaza las conexiones con un error pasajero: se reintenta en lugar de devolver un 500.
 builder.Services.AddDbContext<BasketContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("default")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("default"),
+        sql => sql.EnableRetryOnFailure(maxRetryCount: 10, maxRetryDelay: TimeSpan.FromSeconds(10), errorNumbersToAdd: null)));
 
 builder.Services.AddScoped<FileService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -88,8 +92,16 @@ for (var intento = 1; ; intento++)
 }
 
 // Un error inesperado se registra en el log y el cliente recibe un mensaje genérico, sin detalles internos.
+// Si la base sigue sin responder después de los reintentos se devuelve 503, así el front sabe que puede volver a probar.
 app.UseExceptionHandler(errorApp => errorApp.Run(async context =>
 {
+    if (Transacciones.BaseNoDisponible(context.Features.Get<IExceptionHandlerFeature>()?.Error))
+    {
+        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+        context.Response.Headers.RetryAfter = "10";
+        await context.Response.WriteAsJsonAsync(new Response { mensaje = "La base de datos se está despertando. Probá de nuevo en unos segundos." });
+        return;
+    }
     context.Response.StatusCode = StatusCodes.Status500InternalServerError;
     await context.Response.WriteAsJsonAsync(new Response { mensaje = "Ocurrió un error inesperado." });
 }));
@@ -108,6 +120,10 @@ app.UseAuthorization();
 app.MapControllers();
 // Para el ping que mantiene despierta la app: no toca la base, así la base se puede pausar.
 app.MapGet("/salud", () => "ok").AllowAnonymous();
+// El front lo llama apenas se abre la pantalla de ingreso, para que la base vaya despertando mientras la persona escribe.
+app.MapGet("/salud/base", async (BasketContext db) =>
+    await db.Database.CanConnectAsync() ? Results.Ok("ok") : Results.StatusCode(StatusCodes.Status503ServiceUnavailable))
+    .AllowAnonymous();
 app.MapHub<apiBask.Hubs.PartidosHub>("/hubs/partidos");
 
 app.Run();
