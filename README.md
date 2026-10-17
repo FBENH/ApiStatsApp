@@ -63,7 +63,7 @@ The demo league only plays while someone is watching: a request to its public pa
 
 On F1 the app goes to sleep when nobody uses it. To keep it awake, ping `GET /salud`, which doesn't touch the database. If the app restarts in the middle of a demo game, that game is played again.
 
-The free Azure SQL database pauses itself after an hour without use and takes up to a minute to resume. The API retries connections while it resumes (EF Core `EnableRetryOnFailure`), so the first request is slow but doesn't fail; if the database still doesn't answer it returns `503` with `Retry-After`, and the front retries. `GET /salud/base` opens a connection, so the front calls it when the login page opens to start waking the database early. Don't ping it on a schedule: every wake-up keeps the database running for at least an hour, which uses the free monthly compute.
+The free Azure SQL database pauses itself when nobody uses it and takes up to a minute to resume. The API retries connections while it resumes (EF Core `EnableRetryOnFailure`), so the first request is slow but doesn't fail; if the database still doesn't answer it returns `503` with `Retry-After`, and the front retries. `GET /salud/base` opens a connection, so the front calls it when the login page opens to start waking the database early. Don't ping it on a schedule: every wake-up keeps the database running until the auto-pause delay runs out again, which uses the free monthly compute.
 
 ## Tests
 
